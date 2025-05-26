@@ -1,41 +1,26 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { BibleVersionSelector } from './BibleVersionSelector';
+import ModernBibleReader from './modern/ModernBibleReader';
 import { BibleVersion } from '../../services/comprehensiveBibleService';
-import BibleVersionSelector from './BibleVersionSelector';
-import BibleReader from './BibleReader';
 
 const BibleApp: React.FC = () => {
   const [selectedVersion, setSelectedVersion] = useState<BibleVersion | null>(null);
 
-  useEffect(() => {
-    // Check if there's a previously selected version in localStorage
-    const savedVersion = localStorage.getItem('selected_bible_version');
-    if (savedVersion) {
-      try {
-        setSelectedVersion(JSON.parse(savedVersion));
-      } catch (error) {
-        console.error('Error parsing saved version:', error);
-      }
-    }
-  }, []);
-
-  const handleVersionSelect = (version: BibleVersion) => {
-    setSelectedVersion(version);
-    localStorage.setItem('selected_bible_version', JSON.stringify(version));
-  };
-
-  const handleBackToVersions = () => {
-    setSelectedVersion(null);
-  };
-
   if (!selectedVersion) {
-    return <BibleVersionSelector onVersionSelect={handleVersionSelect} />;
+    return (
+      <BibleVersionSelector 
+        onVersionSelect={setSelectedVersion}
+        title="Choose a Bible Version"
+        subtitle="Select from over 60 translations in multiple languages"
+      />
+    );
   }
 
   return (
-    <BibleReader 
-      selectedVersion={selectedVersion} 
-      onBack={handleBackToVersions}
+    <ModernBibleReader
+      selectedVersion={selectedVersion}
+      onBack={() => setSelectedVersion(null)}
       autoOpenGenesis={true}
     />
   );
