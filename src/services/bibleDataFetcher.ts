@@ -1,4 +1,3 @@
-
 import { BibleVersion, Book, Chapter, Verse } from '../types/bibleTypes';
 
 export class BibleDataFetcher {
@@ -25,32 +24,34 @@ export class BibleDataFetcher {
 
   async fetchVersionsFromGitHub(): Promise<BibleVersion[]> {
     try {
-      console.log('Attempting to fetch Bible versions from bible-data repository...');
+      console.log('Discovering Bible versions from bible-data repository...');
       
       // Try to fetch from the data directory structure
-      const versionsData = await this.fetchFromGitHub('data/versions.json');
-      
-      if (Array.isArray(versionsData)) {
-        return versionsData.map((version: any) => ({
-          id: version.id || version.abbreviation || 'unknown',
-          name: version.name || version.full_name || 'Unknown Version',
-          nameLocal: version.nameLocal || version.name || 'Unknown Version',
-          abbreviation: version.abbreviation || version.id || 'UNK',
-          abbreviationLocal: version.abbreviationLocal || version.abbreviation || 'UNK',
-          description: version.description || `${version.name || 'Bible'} translation`,
-          language: {
-            id: version.language?.id || 'en',
-            name: version.language?.name || 'English',
-            nameLocal: version.language?.nameLocal || 'English',
-            script: version.language?.script || 'Latin',
-            scriptDirection: version.language?.scriptDirection || 'ltr'
-          },
-          source: 'github-data' as const
-        }));
+      try {
+        const versionsData = await this.fetchFromGitHub('data/versions.json');
+        if (Array.isArray(versionsData)) {
+          return versionsData.map((version: any) => ({
+            id: version.id || version.abbreviation || 'unknown',
+            name: version.name || version.full_name || 'Unknown Version',
+            nameLocal: version.nameLocal || version.name || 'Unknown Version',
+            abbreviation: version.abbreviation || version.id || 'UNK',
+            abbreviationLocal: version.abbreviationLocal || version.abbreviation || 'UNK',
+            description: version.description || `${version.name || 'Bible'} translation`,
+            language: {
+              id: version.language?.id || 'en',
+              name: version.language?.name || 'English',
+              nameLocal: version.language?.nameLocal || 'English',
+              script: version.language?.script || 'Latin',
+              scriptDirection: version.language?.scriptDirection || 'ltr'
+            },
+            source: 'github-data' as const
+          }));
+        }
+      } catch (error) {
+        console.log('No versions.json found, scanning for available Bible files...');
       }
       
-      // If versions.json doesn't exist, try to infer from available JSON files
-      console.log('No versions.json found, scanning for available Bible files...');
+      // If versions.json doesn't exist, discover from available JSON files
       return await this.discoverVersionsFromFiles();
       
     } catch (error) {
@@ -60,8 +61,9 @@ export class BibleDataFetcher {
   }
 
   private async discoverVersionsFromFiles(): Promise<BibleVersion[]> {
-    // Common Bible version abbreviations to try
+    // Extended list of Bible version abbreviations to try based on your repository
     const commonVersions = [
+      // Main versions
       { id: 'kjv', name: 'King James Version', abbr: 'KJV' },
       { id: 'niv', name: 'New International Version', abbr: 'NIV' },
       { id: 'esv', name: 'English Standard Version', abbr: 'ESV' },
@@ -71,14 +73,50 @@ export class BibleDataFetcher {
       { id: 'asv', name: 'American Standard Version', abbr: 'ASV' },
       { id: 'web', name: 'World English Bible', abbr: 'WEB' },
       { id: 'ylt', name: 'Young\'s Literal Translation', abbr: 'YLT' },
-      { id: 'darby', name: 'Darby Translation', abbr: 'DARBY' }
+      { id: 'darby', name: 'Darby Translation', abbr: 'DARBY' },
+      
+      // Additional versions from your repository
+      { id: 'amp', name: 'Amplified Bible', abbr: 'AMP' },
+      { id: 'ampc', name: 'Amplified Bible Classic', abbr: 'AMPC' },
+      { id: 'bsb', name: 'Berean Study Bible', abbr: 'BSB' },
+      { id: 'ceb', name: 'Common English Bible', abbr: 'CEB' },
+      { id: 'cev', name: 'Contemporary English Version', abbr: 'CEV' },
+      { id: 'cjb', name: 'Complete Jewish Bible', abbr: 'CJB' },
+      { id: 'csb', name: 'Christian Standard Bible', abbr: 'CSB' },
+      { id: 'erv', name: 'Easy-to-Read Version', abbr: 'ERV' },
+      { id: 'fbv', name: 'Free Bible Version', abbr: 'FBV' },
+      { id: 'gnv', name: 'Geneva Bible', abbr: 'GNV' },
+      { id: 'gw', name: 'God\'s Word Translation', abbr: 'GW' },
+      { id: 'hcsb', name: 'Holman Christian Standard Bible', abbr: 'HCSB' },
+      { id: 'icb', name: 'International Children\'s Bible', abbr: 'ICB' },
+      { id: 'jub', name: 'Jubilee Bible 2000', abbr: 'JUB' },
+      { id: 'kjvaae', name: 'King James Version American Edition', abbr: 'KJVAAE' },
+      { id: 'leb', name: 'Lexham English Bible', abbr: 'LEB' },
+      { id: 'lsb', name: 'Legacy Standard Bible', abbr: 'LSB' },
+      { id: 'mev', name: 'Modern English Version', abbr: 'MEV' },
+      { id: 'msg', name: 'The Message', abbr: 'MSG' },
+      { id: 'nabre', name: 'New American Bible Revised Edition', abbr: 'NABRE' },
+      { id: 'nasb1995', name: 'New American Standard Bible 1995', abbr: 'NASB1995' },
+      { id: 'nasb2020', name: 'New American Standard Bible 2020', abbr: 'NASB2020' },
+      { id: 'ncv', name: 'New Century Version', abbr: 'NCV' },
+      { id: 'net', name: 'New English Translation', abbr: 'NET' },
+      { id: 'nirv', name: 'New International Reader\'s Version', abbr: 'NIRV' },
+      { id: 'nivuk', name: 'New International Version UK', abbr: 'NIVUK' },
+      { id: 'nmv', name: 'New Millennium Version', abbr: 'NMV' },
+      { id: 'nrsv', name: 'New Revised Standard Version', abbr: 'NRSV' },
+      { id: 'nrsvue', name: 'New Revised Standard Version Updated Edition', abbr: 'NRSVUE' },
+      { id: 'rsv', name: 'Revised Standard Version', abbr: 'RSV' },
+      { id: 'tlv', name: 'Tree of Life Version', abbr: 'TLV' },
+      { id: 'tpt', name: 'The Passion Translation', abbr: 'TPT' },
+      { id: 'vulg', name: 'Vulgate', abbr: 'VULG' },
+      { id: 'ylt98', name: 'Young\'s Literal Translation 1898', abbr: 'YLT98' }
     ];
 
     const availableVersions: BibleVersion[] = [];
 
     for (const version of commonVersions) {
       try {
-        // Check if this version exists by trying to fetch Genesis 1
+        // Check if this version exists by trying to fetch the JSON file
         await this.fetchFromGitHub(`data/${version.id}.json`);
         
         availableVersions.push({
@@ -183,19 +221,36 @@ export class BibleDataFetcher {
         
         let content = `<h3>${bookName} ${chapterNum}</h3>`;
         
-        // Handle different data structures
+        // Handle the specific format from your repository
         if (Array.isArray(chapterData)) {
-          // Array of verses
+          // Array of verse objects with "content" and "reference" fields
           chapterData.forEach((verse, index) => {
-            const verseNumber = index + 1;
-            const verseText = typeof verse === 'string' ? verse : verse.text || verse.content || '';
-            content += `<p><sup>${verseNumber}</sup> ${verseText}</p>`;
+            if (verse && typeof verse === 'object') {
+              const verseContent = verse.content || verse.text || '';
+              const verseRef = verse.reference || '';
+              
+              // Extract verse number from reference (e.g. "Job 1:1" -> "1")
+              const verseMatch = verseRef.match(/:(\d+)$/);
+              const verseNumber = verseMatch ? verseMatch[1] : (index + 1).toString();
+              
+              content += `<p><sup>${verseNumber}</sup> ${verseContent}</p>`;
+            } else if (typeof verse === 'string') {
+              // Fallback for simple string verses
+              content += `<p><sup>${index + 1}</sup> ${verse}</p>`;
+            }
           });
         } else if (typeof chapterData === 'object') {
           // Object with verse numbers as keys
           Object.keys(chapterData).forEach((verseKey) => {
-            const verseText = chapterData[verseKey];
-            content += `<p><sup>${verseKey}</sup> ${verseText}</p>`;
+            const verse = chapterData[verseKey];
+            if (verse && typeof verse === 'object' && verse.content) {
+              // Handle verse objects with content field
+              content += `<p><sup>${verseKey}</sup> ${verse.content}</p>`;
+            } else {
+              // Handle simple string verses
+              const verseText = typeof verse === 'string' ? verse : verse.text || verse.content || '';
+              content += `<p><sup>${verseKey}</sup> ${verseText}</p>`;
+            }
           });
         } else if (typeof chapterData === 'string') {
           // Single string content
