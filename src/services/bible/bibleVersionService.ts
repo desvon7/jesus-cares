@@ -1,8 +1,7 @@
-
 import { BibleVersion } from '../../types/bibleTypes';
 import { STATIC_BIBLE_VERSIONS } from '../../data/staticBibleVersions';
 import { BibleCache } from '../bibleCache';
-import { bibleDataFetcher } from '../bibleDataFetcher';
+import { bibleDataFetcher } from './bibleDataFetcher';
 
 export class BibleVersionService {
   private cache = new BibleCache();

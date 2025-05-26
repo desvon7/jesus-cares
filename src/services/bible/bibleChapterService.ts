@@ -1,9 +1,8 @@
-
 import { Chapter } from '../../types/bibleTypes';
 import { STATIC_BIBLE_VERSIONS } from '../../data/staticBibleVersions';
 import { CHAPTER_COUNTS } from '../../data/standardBooks';
 import { BibleCache } from '../bibleCache';
-import { bibleDataFetcher } from '../bibleDataFetcher';
+import { bibleDataFetcher } from './bibleDataFetcher';
 
 export class BibleChapterService {
   private cache = new BibleCache();
