@@ -1,20 +1,45 @@
 
 import React from 'react';
-import { Book, Chapter } from '../../../../services/comprehensiveBibleService';
 import { useChapterText } from '../../../../hooks/useComprehensiveBibleData';
 import { useBibleReaderContext } from '../../providers/BibleReaderProvider';
 
-interface ModernVersesReaderProps {
-  book: Book;
-  chapter: Chapter;
-}
+export const ModernVersesReader: React.FC = () => {
+  const { 
+    currentBook, 
+    currentChapter, 
+    readingSettings, 
+    setViewMode 
+  } = useBibleReaderContext();
 
-export const ModernVersesReader: React.FC<ModernVersesReaderProps> = ({
-  book,
-  chapter
-}) => {
-  const { chapterData, loading, error } = useChapterText(book.bibleId, chapter.id);
-  const { readingSettings } = useBibleReaderContext();
+  // If no chapter is selected, show selection interface
+  if (!currentBook || !currentChapter) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-gray-700 dark:to-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-8">
+            <span className="text-gray-600 dark:text-gray-300 text-3xl">📖</span>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            {!currentBook ? 'Select a Book' : 'Select a Chapter'}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">
+            {!currentBook 
+              ? 'Choose a book from the Bible to start reading.' 
+              : 'Choose a chapter to continue reading.'
+            }
+          </p>
+          <button
+            onClick={() => setViewMode(!currentBook ? 'books' : 'chapters')}
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors text-lg"
+          >
+            {!currentBook ? 'Browse Books' : 'Browse Chapters'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { chapterData, loading, error } = useChapterText(currentBook.bibleId, currentChapter.id);
 
   if (loading) {
     return (
@@ -67,14 +92,6 @@ export const ModernVersesReader: React.FC<ModernVersesReaderProps> = ({
     
     return content;
   };
-
-  // Log chapter data for debugging
-  console.log('ModernVersesReader - Scripture Data:', {
-    hasContent: !!chapterData?.content,
-    contentType: typeof chapterData?.content,
-    contentLength: chapterData?.content?.length || 0,
-    contentPreview: chapterData?.content?.substring(0, 200) || 'No content'
-  });
 
   return (
     <div className="h-full overflow-y-auto">

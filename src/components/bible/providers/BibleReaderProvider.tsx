@@ -106,6 +106,7 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
         book.abbreviation.toLowerCase() === 'gen'
       );
       if (genesis) {
+        console.log('Auto-opening Genesis:', genesis);
         setCurrentBook(genesis);
         setViewMode('verses');
       }
@@ -117,10 +118,34 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
     if (currentBook && chapters.length > 0 && !currentChapter && autoOpenGenesis) {
       const firstChapter = chapters.find(chapter => chapter.number === '1');
       if (firstChapter) {
+        console.log('Auto-opening Chapter 1:', firstChapter);
         setCurrentChapter(firstChapter);
       }
     }
   }, [chapters, currentBook, currentChapter, autoOpenGenesis, setCurrentChapter]);
+
+  // Enhanced navigation functions that work with the allChapters array
+  const enhancedGoToPreviousChapter = () => {
+    if (!currentChapter || !allChapters.length) return;
+    
+    const currentIndex = allChapters.findIndex(ch => ch.id === currentChapter.id);
+    if (currentIndex > 0) {
+      const previousChapter = allChapters[currentIndex - 1];
+      console.log('Navigating to previous chapter:', previousChapter);
+      setCurrentChapter(previousChapter);
+    }
+  };
+
+  const enhancedGoToNextChapter = () => {
+    if (!currentChapter || !allChapters.length) return;
+    
+    const currentIndex = allChapters.findIndex(ch => ch.id === currentChapter.id);
+    if (currentIndex >= 0 && currentIndex < allChapters.length - 1) {
+      const nextChapter = allChapters[currentIndex + 1];
+      console.log('Navigating to next chapter:', nextChapter);
+      setCurrentChapter(nextChapter);
+    }
+  };
 
   const value: BibleReaderContextType = {
     viewMode,
@@ -136,8 +161,8 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
     setCurrentVersion,
     setCurrentBook,
     setCurrentChapter,
-    goToPreviousChapter,
-    goToNextChapter,
+    goToPreviousChapter: enhancedGoToPreviousChapter,
+    goToNextChapter: enhancedGoToNextChapter,
     canGoPrevious,
     canGoNext,
     versions,
@@ -151,8 +176,12 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
 
   console.log('BibleReaderProvider providing context value:', {
     currentVersion: value.currentVersion?.id,
+    currentBook: value.currentBook?.name,
+    currentChapter: value.currentChapter?.number,
     viewMode: value.viewMode,
-    booksCount: value.books.length
+    booksCount: value.books.length,
+    chaptersCount: value.chapters.length,
+    allChaptersCount: value.allChapters.length
   });
 
   return (
