@@ -49,6 +49,17 @@ const BibleToolbar: React.FC<BibleToolbarProps> = ({
     navigate('/');
   };
 
+  const handleVersionChange = (versionId: string) => {
+    console.log('Version change requested:', versionId);
+    const version = availableVersions.find(v => v.id === versionId);
+    if (version) {
+      console.log('Found version:', version);
+      onVersionChange(version);
+    } else {
+      console.error('Version not found:', versionId);
+    }
+  };
+
   const handleLanguageChange = (languageId: string) => {
     // Find versions in the selected language
     const languageVersions = availableVersions.filter(v => v.language.id === languageId);
@@ -62,6 +73,11 @@ const BibleToolbar: React.FC<BibleToolbarProps> = ({
     new Map(
       availableVersions.map(v => [v.language.id, v.language])
     ).values()
+  );
+
+  // Filter versions by current language for the version selector
+  const versionsInCurrentLanguage = availableVersions.filter(
+    v => v.language.id === selectedVersion.language.id
   );
 
   return (
@@ -108,16 +124,13 @@ const BibleToolbar: React.FC<BibleToolbarProps> = ({
             {/* Version selector */}
             <Select 
               value={selectedVersion.id} 
-              onValueChange={(value) => {
-                const version = availableVersions.find(v => v.id === value);
-                if (version) onVersionChange(version);
-              }}
+              onValueChange={handleVersionChange}
             >
               <SelectTrigger className="w-32">
                 <SelectValue>{selectedVersion.abbreviation}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {availableVersions.map((version) => (
+                {versionsInCurrentLanguage.map((version) => (
                   <SelectItem key={version.id} value={version.id}>
                     {version.abbreviation} - {version.name}
                   </SelectItem>

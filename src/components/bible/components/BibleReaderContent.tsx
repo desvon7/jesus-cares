@@ -44,12 +44,14 @@ export const BibleReaderContent: React.FC<BibleReaderContentProps> = ({ selected
   } = useBibleReaderContext();
 
   const handleBookSelect = (book: BookType) => {
+    console.log('Book selected:', book);
     setCurrentBook(book);
     setCurrentChapter(null);
     setViewMode('chapters');
   };
 
   const handleChapterSelect = (chapter: Chapter) => {
+    console.log('Chapter selected:', chapter);
     setCurrentChapter(chapter);
     setViewMode('verses');
   };
@@ -66,8 +68,9 @@ export const BibleReaderContent: React.FC<BibleReaderContentProps> = ({ selected
   };
 
   const handleVersionChange = (version: BibleVersion) => {
+    console.log('Version change requested in BibleReaderContent:', version);
     setCurrentVersion(version);
-    // Reset navigation when version changes
+    // Reset navigation when version changes to avoid data mismatch
     setCurrentBook(null);
     setCurrentChapter(null);
     setViewMode('books');
