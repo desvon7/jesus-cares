@@ -31,27 +31,25 @@ export class BibleTextService {
     const version = STATIC_BIBLE_VERSIONS.find(v => v.id === bibleId);
     const book = STANDARD_BOOKS.find(b => b.id === bookId);
 
+    // PRIORITY 1: Try local data files first
+    try {
+      console.log(`Fetching scripture from local data for ${bibleId}`);
+      const content = await bibleDataFetcher.fetchChapterTextFromGitHub(bibleId, chapterId);
+      
+      // Verify we got real content
+      if (content && content.content && !content.content.includes('Sample verse') && !content.content.includes('enhanced content')) {
+        console.log(`SUCCESS: Retrieved scripture from local data for ${bibleId}:${chapterId}`);
+        this.cache.setCachedData(cacheKey, content);
+        return content;
+      } else {
+        console.warn(`Retrieved content appears to be placeholder for ${bibleId}:${chapterId}`);
+      }
+    } catch (error) {
+      console.error(`FAILED: Local data fetch for ${bibleId}:`, error);
+    }
+
     if (version) {
       console.log(`Found version: ${version.name} (${version.source})`);
-
-      // PRIORITY 1: Try bible-data repository for real scripture
-      if (version.source === 'github-data') {
-        try {
-          console.log(`Fetching REAL scripture from bible-data repository for ${bibleId}`);
-          const content = await bibleDataFetcher.fetchChapterTextFromGitHub(bibleId, chapterId);
-          
-          // Verify we got real content (not placeholder)
-          if (content && content.content && !content.content.includes('Sample verse') && !content.content.includes('enhanced content')) {
-            console.log(`SUCCESS: Retrieved real scripture for ${bibleId}:${chapterId}`);
-            this.cache.setCachedData(cacheKey, content);
-            return content;
-          } else {
-            console.warn(`Retrieved content appears to be placeholder for ${bibleId}:${chapterId}`);
-          }
-        } catch (error) {
-          console.error(`FAILED: bible-data repository fetch for ${bibleId}:`, error);
-        }
-      }
 
       // PRIORITY 2: Try GitHub sources for enhanced versions
       if (version.source === 'github-unfolding' && this.githubService) {
@@ -94,12 +92,12 @@ export class BibleTextService {
     }
 
     // LAST RESORT: Placeholder content with clear indication
-    console.warn(`FALLBACK: No real scripture found for ${bibleId}:${chapterId}, using placeholder`);
+    console.warn(`FALLBACK: No scripture found for ${bibleId}:${chapterId}, using placeholder`);
     const chapterData = {
       id: chapterId,
       bibleId,
       reference: `${book?.name || bookId} ${chapterNum}`,
-      content: `<h3>${book?.name || bookId} ${chapterNum}</h3><p><em>Scripture content not available. This version may not have real text data in the repository.</em></p><p>Available sources with real scripture: ${STATIC_BIBLE_VERSIONS.filter(v => v.source === 'github-data').map(v => v.abbreviation).join(', ')}</p>`
+      content: `<h3>${book?.name || bookId} ${chapterNum}</h3><p><em>Scripture content not available. This version may not have data in the local files.</em></p><p>Try versions like KJV, NIV, ESV, NASB, NKJV, or NLT which should have content in the local data files.</p>`
     };
     
     this.cache.setCachedData(cacheKey, chapterData);

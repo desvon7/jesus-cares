@@ -28,6 +28,8 @@ export class BibleContentParser {
       });
     } else if (typeof chapterData === 'object' && chapterData !== null) {
       console.log(`Processing verses as object with keys: ${Object.keys(chapterData).slice(0, 5).join(', ')}`);
+      
+      // Handle the local JSON structure where verses are objects with verse numbers as keys
       const verseKeys = Object.keys(chapterData).sort((a, b) => {
         const numA = parseInt(a) || 0;
         const numB = parseInt(b) || 0;
@@ -40,7 +42,8 @@ export class BibleContentParser {
           let verseText = '';
           
           if (typeof verse === 'object' && verse !== null) {
-            verseText = verse.content || verse.text || verse.verse || '';
+            // Handle nested verse objects
+            verseText = verse.text || verse.content || verse.verse || JSON.stringify(verse);
           } else if (typeof verse === 'string') {
             verseText = verse;
           }
@@ -58,8 +61,8 @@ export class BibleContentParser {
         <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
           <span class="text-slate-400 text-xl">📖</span>
         </div>
-        <p class="text-slate-500 dark:text-slate-400 font-medium">Scripture content not available. This version may not have real text data in the repository.</p>
-        <p class="text-sm text-slate-400 mt-2">Try switching to KJV, NIV, ESV, NASB, NKJV, or NLT versions which have verified content.</p>
+        <p class="text-slate-500 dark:text-slate-400 font-medium">Scripture content not available in this format.</p>
+        <p class="text-sm text-slate-400 mt-2">The data structure for this version may need additional parsing.</p>
       </div>`;
     }
 
