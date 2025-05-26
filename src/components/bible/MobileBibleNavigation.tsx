@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { ChevronLeft, ChevronRight, Home, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BibleVersion, Book, Chapter } from '../../services/comprehensiveBibleService';
 
@@ -29,9 +30,15 @@ const MobileBibleNavigation: React.FC<MobileBibleNavigationProps> = ({
   canGoPrevious,
   canGoNext
 }) => {
+  const navigate = useNavigate();
+
+  const handleHomeClick = () => {
+    navigate('/');
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-800/50 p-4 safe-area-inset-bottom">
-      {/* Top row - Navigation breadcrumbs with Apple-style typography */}
+      {/* Top row - Navigation breadcrumbs */}
       <div className="flex items-center justify-center mb-4 space-x-2 text-sm">
         <Button
           variant="ghost"
@@ -69,7 +76,7 @@ const MobileBibleNavigation: React.FC<MobileBibleNavigationProps> = ({
         )}
       </div>
 
-      {/* Bottom row - Navigation controls with Apple-style buttons */}
+      {/* Bottom row - Navigation controls */}
       <div className="flex items-center justify-between">
         <Button
           variant="ghost"
@@ -86,7 +93,7 @@ const MobileBibleNavigation: React.FC<MobileBibleNavigationProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onVersionSelect}
+            onClick={handleHomeClick}
             className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400"
           >
             <Home className="h-4 w-4" />

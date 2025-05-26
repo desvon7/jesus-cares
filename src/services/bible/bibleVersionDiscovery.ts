@@ -12,11 +12,8 @@ export class BibleVersionDiscovery {
       const availableFiles = await this.githubService.fetchDirectoryListing();
       const versions: BibleVersion[] = [];
 
-      // Priority versions to test first
-      const priorityVersions = ['kjv.json', 'niv.json', 'esv.json', 'nlt.json', 'nasb1995.json'];
-      const allFiles = [...priorityVersions, ...availableFiles.filter(f => !priorityVersions.includes(f))];
-
-      for (const file of allFiles.slice(0, 10)) { // Limit to first 10 for performance
+      // Test each file to see if it contains valid data
+      for (const file of availableFiles) {
         if (file.endsWith('.json')) {
           const versionId = file.replace('.json', '');
           console.log(`Processing Bible file: ${file} -> ${versionId}`);
@@ -78,15 +75,7 @@ export class BibleVersionDiscovery {
       'esv': 'English Standard Version',
       'nlt': 'New Living Translation',
       'nasb1995': 'New American Standard Bible 1995',
-      'nkjv': 'New King James Version',
-      'amp': 'Amplified Bible',
-      'msg': 'The Message',
-      'asv': 'American Standard Version',
-      'bsb': 'Berean Study Bible',
-      'csb': 'Christian Standard Bible',
-      'net': 'NET Bible',
-      'nrsv': 'New Revised Standard Version',
-      'rsv': 'Revised Standard Version'
+      'nkjv': 'New King James Version'
     };
 
     const name = versionNames[versionId.toLowerCase()] || versionId.toUpperCase();
