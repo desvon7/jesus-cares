@@ -29,7 +29,7 @@ export class BibleContentParser {
     } else if (typeof chapterData === 'object' && chapterData !== null) {
       console.log(`Processing verses as object with keys: ${Object.keys(chapterData).slice(0, 10).join(', ')}`);
       
-      // Handle the actual JSON structure where verses are objects with verse numbers as keys
+      // Sort verse keys numerically
       const verseKeys = Object.keys(chapterData).sort((a, b) => {
         const numA = parseInt(a) || 0;
         const numB = parseInt(b) || 0;
@@ -43,13 +43,14 @@ export class BibleContentParser {
         if (verse) {
           let verseText = '';
           
-          if (typeof verse === 'object' && verse !== null) {
-            // Handle nested verse objects - check for common properties
+          if (typeof verse === 'string') {
+            verseText = verse;
+          } else if (typeof verse === 'object' && verse !== null) {
+            // Handle nested verse objects
             verseText = verse.text || verse.content || verse.verse || verse.t || verse.v || '';
             
-            // If it's still an object, try to extract text from common patterns
-            if (!verseText && typeof verse === 'object') {
-              // Some files might have the verse text directly as a property
+            // If still no text, try other common patterns
+            if (!verseText) {
               const possibleKeys = ['text', 'content', 'verse', 't', 'v', 'value'];
               for (const key of possibleKeys) {
                 if (verse[key] && typeof verse[key] === 'string') {
@@ -57,14 +58,7 @@ export class BibleContentParser {
                   break;
                 }
               }
-              
-              // If still no text found, convert object to string as last resort
-              if (!verseText) {
-                verseText = JSON.stringify(verse);
-              }
             }
-          } else if (typeof verse === 'string') {
-            verseText = verse;
           }
           
           if (verseText && verseText.trim() && verseText !== '{}') {
@@ -82,8 +76,12 @@ export class BibleContentParser {
           content += `<p class="mb-4 leading-relaxed"><sup class="text-blue-600 dark:text-blue-400 font-medium text-sm mr-1">${index + 1}</sup> ${para.trim()}</p>`;
         }
       });
-    } else {
-      console.warn('Could not parse chapter data - unknown format', { chapterData });
+    }
+
+    // Check if we actually have verses, if not show error message
+    const verseCount = (content.match(/<sup/g) || []).length;
+    if (verseCount === 0) {
+      console.warn('No verses found in chapter data', { chapterData });
       content += `<div class="text-center py-12">
         <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
           <span class="text-slate-400 text-xl">📖</span>
@@ -92,10 +90,9 @@ export class BibleContentParser {
         <p class="text-sm text-slate-400 mt-2">The data structure for this version may need additional parsing.</p>
         <p class="text-sm text-slate-400 mt-2">Try versions like KJV, ESV, NIV, NASB, or NLT which should have content available.</p>
       </div>`;
+    } else {
+      console.log(`Generated content with ${verseCount} verses for ${bookName} ${chapterNum}`);
     }
-
-    const verseCount = (content.match(/<sup/g) || []).length;
-    console.log(`Generated content with ${verseCount} verses for ${bookName} ${chapterNum}`);
     
     return content;
   }

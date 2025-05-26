@@ -10,9 +10,13 @@ export class BibleTextService {
 
   async getChapterText(bibleId: string, chapterId: string): Promise<any> {
     const cacheKey = `chapter_text_${bibleId}_${chapterId}`;
-    const cachedData = this.cache.getCachedData(cacheKey);
     
-    if (cachedData) {
+    // Clear any cached placeholder content to force fresh fetch
+    const cachedData = this.cache.getCachedData(cacheKey);
+    if (cachedData && cachedData.content && cachedData.content.includes('Scripture content not available')) {
+      console.log(`Clearing cached placeholder for ${bibleId}:${chapterId}`);
+      this.cache.removeCachedData(cacheKey);
+    } else if (cachedData) {
       console.log(`Using cached chapter text for ${bibleId}:${chapterId}`);
       return cachedData;
     }
@@ -31,7 +35,8 @@ export class BibleTextService {
       // Verify we got real content
       if (content && content.content && 
           !content.content.includes('Scripture content not available') && 
-          !content.content.includes('Sample verse')) {
+          !content.content.includes('Sample verse') &&
+          (content.content.match(/<sup/g) || []).length > 0) {
         console.log(`SUCCESS: Retrieved scripture from local data for ${bibleId}:${chapterId}`);
         this.cache.setCachedData(cacheKey, content);
         return content;
@@ -59,7 +64,7 @@ export class BibleTextService {
         </div>`
     };
     
-    this.cache.setCachedData(cacheKey, chapterData);
+    // Don't cache the fallback content so it can retry
     return chapterData;
   }
 

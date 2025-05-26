@@ -164,24 +164,57 @@ export class BibleDataFetcher {
         throw new Error(`Could not load Bible data for any variant of ${bibleId}: ${fallbackIds.join(', ')}`);
       }
 
-      const bookKey = bookId.toLowerCase();
+      // Map common book abbreviations to the keys used in JSON files
+      const bookKeyMappings: Record<string, string[]> = {
+        'GEN': ['genesis', 'gen', 'ge'],
+        'EXO': ['exodus', 'exo', 'ex'],
+        'LEV': ['leviticus', 'lev', 'le'],
+        'NUM': ['numbers', 'num', 'nu'],
+        'DEU': ['deuteronomy', 'deu', 'dt'],
+        'JOS': ['joshua', 'jos', 'jsh'],
+        'JDG': ['judges', 'jdg', 'jg'],
+        'RUT': ['ruth', 'rut', 'ru'],
+        'MAT': ['matthew', 'mat', 'mt'],
+        'MRK': ['mark', 'mrk', 'mk'],
+        'LUK': ['luke', 'luk', 'lk'],
+        'JHN': ['john', 'jhn', 'jn'],
+        'ACT': ['acts', 'act', 'ac'],
+        'ROM': ['romans', 'rom', 'ro'],
+        // Add more mappings as needed
+      };
+
+      const possibleBookKeys = bookKeyMappings[bookId.toUpperCase()] || [bookId.toLowerCase()];
       
       // Handle different JSON structures
       let booksData = bibleData.books || bibleData;
       
-      console.log(`Looking for book "${bookKey}" in data from ${successfulId}.json`);
+      console.log(`Looking for book using keys: ${possibleBookKeys.join(', ')} in data from ${successfulId}.json`);
       console.log(`Available books:`, Object.keys(booksData).slice(0, 10));
       
-      if (booksData && booksData[bookKey] && booksData[bookKey][chapterNum]) {
-        const chapterData = booksData[bookKey][chapterNum];
-        const bookName = BibleBookMapper.getBookName(bookKey);
+      let foundBookKey = null;
+      let chapterData = null;
+      
+      // Try to find the book using different key variations
+      for (const bookKey of possibleBookKeys) {
+        if (booksData[bookKey] && booksData[bookKey][chapterNum]) {
+          foundBookKey = bookKey;
+          chapterData = booksData[bookKey][chapterNum];
+          break;
+        }
+      }
+      
+      if (chapterData) {
+        const bookName = BibleBookMapper.getBookName(foundBookKey);
         
-        console.log(`Successfully loaded scripture data for ${bibleId}:${bookId}:${chapterNum}`, {
+        console.log(`Successfully loaded scripture data for ${bibleId}:${foundBookKey}:${chapterNum}`, {
           dataType: typeof chapterData,
           isArray: Array.isArray(chapterData),
           keyCount: typeof chapterData === 'object' ? Object.keys(chapterData).length : 0,
           sampleKeys: typeof chapterData === 'object' ? Object.keys(chapterData).slice(0, 5) : [],
-          hasVerses: typeof chapterData === 'object' && Object.keys(chapterData).some(key => !isNaN(parseInt(key)))
+          hasVerses: typeof chapterData === 'object' && Object.keys(chapterData).some(key => !isNaN(parseInt(key))),
+          sampleContent: typeof chapterData === 'object' ? 
+            Object.values(chapterData).slice(0, 2).map(v => typeof v === 'string' ? v.substring(0, 50) : v) : 
+            chapterData
         });
         
         const content = BibleContentParser.parseChapterContent(chapterData, bookName, chapterNum);
@@ -194,8 +227,8 @@ export class BibleDataFetcher {
         };
       }
       
-      console.log(`Chapter not found: ${bookKey}[${chapterNum}] in ${successfulId}.json`);
-      throw new Error(`Scripture chapter not found in data: ${bookKey} ${chapterNum}`);
+      console.log(`Chapter not found: ${possibleBookKeys.join('/')}[${chapterNum}] in ${successfulId}.json`);
+      throw new Error(`Scripture chapter not found in data: ${bookId} ${chapterNum}`);
     } catch (error) {
       console.error(`Error loading scripture text for ${chapterId}:`, error);
       throw error;
