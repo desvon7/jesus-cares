@@ -34,7 +34,7 @@ interface BibleReaderContextType {
   chaptersError: string | null;
 }
 
-const BibleReaderContext = createContext<BibleReaderContextType | undefined>(undefined);
+const BibleReaderContext = createContext<BibleReaderContextType | null>(null);
 
 export const useBibleReaderContext = () => {
   const context = useContext(BibleReaderContext);
@@ -122,7 +122,7 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
     }
   }, [chapters, currentBook, currentChapter, autoOpenGenesis, setCurrentChapter]);
 
-  const value = {
+  const value: BibleReaderContextType = {
     viewMode,
     setViewMode,
     showSettings,
