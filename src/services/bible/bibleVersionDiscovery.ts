@@ -1,45 +1,46 @@
 
 import { BibleVersion } from '../../types/bibleTypes';
-import { GitHubDataService } from './githubDataService';
 
 export class BibleVersionDiscovery {
-  constructor(private githubService: GitHubDataService) {}
+  constructor() {}
 
   async discoverVersionsFromFiles(): Promise<BibleVersion[]> {
     try {
-      console.log('Discovering Bible versions from local data files...');
+      console.log('Discovering Bible versions from local JSON files...');
       
-      const availableFiles = await this.githubService.fetchDirectoryListing();
+      // List of all available Bible version files
+      const availableVersions = [
+        'amp', 'ampc', 'asv', 'bsb', 'ceb', 'cev', 'cevdci', 'cevuk', 'cjb', 'cpdv', 
+        'csb', 'darby', 'drc1752', 'easy', 'erv', 'esv', 'fbv', 'fnvnt', 'gnbdc', 
+        'gnbdk', 'gnbuk', 'gnt', 'gntd', 'gnv', 'gw', 'gwc', 'hcsb', 'icb', 'icl00d', 
+        'jub', 'kjv', 'kjvaae', 'kjvae', 'leb', 'lsb', 'mev', 'mp1650', 'mp1781', 
+        'msg', 'nabre', 'nasb1995', 'nasb2020', 'ncv', 'net', 'nirv', 'niv', 'nivuk', 
+        'nkjv', 'nlt', 'nmv', 'nr06', 'nrsv', 'nrsvue', 'pev', 'rad', 'rsv', 'rsvci', 
+        'rv1885', 'rv1895', 'tcent', 'teg', 'tlv', 'tojb2011', 'tpt', 'ts2009', 
+        'vulg', 'wbms', 'webbe', 'webus', 'wmb', 'wmbbe', 'ylt98'
+      ];
+
       const versions: BibleVersion[] = [];
 
-      // Test each file to see if it contains valid data
-      for (const file of availableFiles) {
-        if (file.endsWith('.json')) {
-          const versionId = file.replace('.json', '');
-          console.log(`Processing Bible file: ${file} -> ${versionId}`);
-          
-          try {
-            const sampleData = await this.githubService.fetchFromGitHub(file);
+      // Test each file to see if it's accessible
+      for (const versionId of availableVersions) {
+        try {
+          const response = await fetch(`/data/${versionId}.json`);
+          if (response.ok) {
+            const sampleData = await response.json();
             
             if (this.isValidBibleData(sampleData)) {
               const version = this.createVersionFromFile(versionId, sampleData);
               versions.push(version);
-              console.log(`Added Bible version: ${version.name}`);
-            } else {
-              console.warn(`File ${file} does not contain valid Bible data`);
+              console.log(`Added Bible version: ${version.name} (${version.abbreviation})`);
             }
-          } catch (error) {
-            console.warn(`Could not process ${file}:`, error);
           }
+        } catch (error) {
+          console.warn(`Could not access ${versionId}.json:`, error);
         }
       }
 
-      if (versions.length === 0) {
-        console.warn('No valid Bible versions found in local data');
-      } else {
-        console.log(`Discovered ${versions.length} Bible versions from local data`);
-      }
-
+      console.log(`Discovered ${versions.length} Bible versions from local JSON files`);
       return versions;
     } catch (error) {
       console.error('Error discovering versions from local files:', error);
@@ -165,7 +166,7 @@ export class BibleVersionDiscovery {
         script: versionInfo.language === 'la' ? 'Latin' : 'Latin',
         scriptDirection: 'ltr'
       },
-      source: 'github-data'
+      source: 'local-json'
     };
   }
 }
