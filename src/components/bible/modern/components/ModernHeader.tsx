@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { ArrowLeft, ChevronDown, Settings, Share } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Settings, Share, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BibleVersion, Book, Chapter } from '../../../../services/comprehensiveBibleService';
 
@@ -25,6 +26,12 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({
   onChapterSelect,
   onSettingsOpen
 }) => {
+  const navigate = useNavigate();
+
+  const handleHomeClick = () => {
+    navigate('/');
+  };
+
   return (
     <div className="bg-white dark:bg-black border-b border-gray-100 dark:border-gray-900 px-4 py-3 safe-area-inset-top">
       <div className="flex items-center justify-between">
@@ -83,6 +90,14 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({
 
         {/* Right - Actions */}
         <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleHomeClick}
+            className="text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full p-2"
+          >
+            <Home className="h-5 w-5" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"

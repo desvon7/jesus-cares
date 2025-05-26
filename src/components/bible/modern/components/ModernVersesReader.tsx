@@ -1,5 +1,8 @@
 
 import React from 'react';
+import { Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { Book, Chapter } from '../../../../services/comprehensiveBibleService';
 import { useChapterText } from '../../../../hooks/useComprehensiveBibleData';
 import { useBibleReaderContext } from '../../providers/BibleReaderProvider';
@@ -13,8 +16,13 @@ export const ModernVersesReader: React.FC<ModernVersesReaderProps> = ({
   book,
   chapter
 }) => {
+  const navigate = useNavigate();
   const { chapterData, loading, error } = useChapterText(book.bibleId, chapter.id);
   const { readingSettings } = useBibleReaderContext();
+
+  const handleHomeClick = () => {
+    navigate('/');
+  };
 
   if (loading) {
     return (
@@ -97,12 +105,26 @@ export const ModernVersesReader: React.FC<ModernVersesReaderProps> = ({
           />
         ) : (
           <div className="text-center py-16">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-gray-700 dark:to-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <span className="text-gray-400 text-2xl">📖</span>
+            {/* Home button */}
+            <div className="mb-8">
+              <Button
+                variant="ghost"
+                onClick={handleHomeClick}
+                className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-full px-4 py-2 flex items-center space-x-2 mx-auto"
+              >
+                <Home className="h-4 w-4" />
+                <span>Home</span>
+              </Button>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No content available</h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">This chapter content could not be loaded.</p>
-            <p className="text-sm text-gray-400">Try switching to a different Bible version like KJV, NIV, or ESV.</p>
+
+            {/* Error state content */}
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-gray-700 dark:to-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-8">
+              <span className="text-gray-600 dark:text-gray-300 text-3xl">📖</span>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Scripture content not available</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">This version may not have data in the local files.</p>
+            <p className="text-gray-500 dark:text-gray-400">Try versions like KJV, NIV, ESV, NASB, NKJV, or NLT which should have content available.</p>
           </div>
         )}
       </div>
