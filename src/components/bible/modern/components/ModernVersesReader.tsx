@@ -34,8 +34,9 @@ export const ModernVersesReader: React.FC<ModernVersesReaderProps> = ({
           <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-red-600 dark:text-red-400 text-xl">!</span>
           </div>
-          <p className="text-red-600 dark:text-red-400 font-medium mb-2">Scripture not available</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Try selecting a different version like KJV, NIV, or ESV</p>
+          <p className="text-red-600 dark:text-red-400 font-medium mb-2">Failed to load scripture</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{error}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Try selecting a different version like KJV, NIV, or ESV</p>
         </div>
       </div>
     );
@@ -66,6 +67,14 @@ export const ModernVersesReader: React.FC<ModernVersesReaderProps> = ({
     
     return content;
   };
+
+  // Log chapter data for debugging
+  console.log('ModernVersesReader - Chapter Data:', {
+    hasContent: !!chapterData?.content,
+    contentType: typeof chapterData?.content,
+    contentLength: chapterData?.content?.length || 0,
+    contentPreview: chapterData?.content?.substring(0, 200) || 'No content'
+  });
 
   return (
     <div className="h-full overflow-y-auto">

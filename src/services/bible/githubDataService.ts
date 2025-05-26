@@ -4,7 +4,7 @@ export class GitHubDataService {
 
   async fetchFromGitHub(path: string) {
     const url = `${this.baseUrl}/${path}`;
-    console.log(`Attempting to fetch from local data: ${url}`);
+    console.log(`Fetching from local data: ${url}`);
     
     try {
       const response = await fetch(url);
@@ -13,7 +13,11 @@ export class GitHubDataService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log(`Successfully fetched ${path}. Data type:`, typeof data, 'Keys:', Object.keys(data).slice(0, 5));
+      console.log(`Successfully fetched ${path}. Data structure:`, {
+        type: typeof data,
+        hasContent: !!data,
+        sampleKeys: Object.keys(data).slice(0, 3)
+      });
       return data;
     } catch (error) {
       console.error(`Failed to fetch ${path}:`, error);
@@ -22,6 +26,7 @@ export class GitHubDataService {
   }
 
   async fetchDirectoryListing(): Promise<string[]> {
+    // Return the actual files that exist in the data directory
     const availableFiles = [
       'amp.json', 'ampc.json', 'asv.json', 'bsb.json', 'ceb.json', 'cev.json', 
       'cevdci.json', 'cevuk.json', 'cjb.json', 'cpdv.json', 'csb.json', 'darby.json',
@@ -38,7 +43,16 @@ export class GitHubDataService {
       'ylt98.json'
     ];
 
-    console.log(`Found ${availableFiles.length} available Bible files`);
+    console.log(`Available Bible files: ${availableFiles.length} versions`);
     return availableFiles;
+  }
+
+  async validateFileExists(filename: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/${filename}`, { method: 'HEAD' });
+      return response.ok;
+    } catch {
+      return false;
+    }
   }
 }

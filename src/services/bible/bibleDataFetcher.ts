@@ -95,6 +95,15 @@ export class BibleDataFetcher {
         const chapterData = bibleData[bookKey][chapterNum];
         const bookName = BibleBookMapper.getBookName(bookKey);
         
+        console.log(`Raw chapter data structure for ${bibleId}:${bookId}:${chapterNum}:`, {
+          type: typeof chapterData,
+          isArray: Array.isArray(chapterData),
+          keys: typeof chapterData === 'object' ? Object.keys(chapterData).slice(0, 10) : 'N/A',
+          sampleData: typeof chapterData === 'object' ? 
+            Object.entries(chapterData).slice(0, 2).map(([k, v]) => ({ [k]: typeof v === 'string' ? v.substring(0, 50) + '...' : v })) : 
+            'N/A'
+        });
+        
         const content = BibleContentParser.parseChapterContent(chapterData, bookName, chapterNum);
         
         return {

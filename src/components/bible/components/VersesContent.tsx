@@ -44,6 +44,14 @@ export const VersesContent: React.FC<VersesContentProps> = ({
     return content;
   };
 
+  // Log chapter data for debugging
+  console.log('VersesContent - Chapter Data:', {
+    hasContent: !!chapterData?.content,
+    contentType: typeof chapterData?.content,
+    contentLength: chapterData?.content?.length || 0,
+    contentPreview: chapterData?.content?.substring(0, 200) || 'No content'
+  });
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className={`${isMobile ? 'px-6 py-8' : 'px-8 py-12'}`}>
@@ -70,7 +78,7 @@ export const VersesContent: React.FC<VersesContentProps> = ({
             </div>
             <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">No content available</h3>
             <p className="text-slate-500 dark:text-slate-400 mb-4">This chapter content could not be loaded.</p>
-            <p className="text-sm text-slate-400">Try switching to a different Bible version like KJV, NIV, or ESV.</p>
+            <p className="text-sm text-slate-400">Try switching to a different Bible version like KJV, NIV, ESV, NASB, NKJV, or NLT.</p>
           </div>
         )}
       </div>
