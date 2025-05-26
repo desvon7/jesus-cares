@@ -13,14 +13,21 @@ export class BibleContentParser {
       console.log(`Processing ${chapterData.length} verses as array`);
       chapterData.forEach((verse, index) => {
         if (verse && typeof verse === 'object') {
+          // Handle the structure shown in your JSON: { "content": "verse text", "reference": "Job 1:1" }
           const verseContent = verse.content || verse.text || verse.verse || verse.t || '';
           const verseRef = verse.reference || '';
           
-          const verseMatch = verseRef.match(/:(\d+)$/);
-          const verseNumber = verseMatch ? verseMatch[1] : (index + 1).toString();
+          // Extract verse number from reference (e.g., "Job 1:1" -> "1")
+          let verseNumber = '';
+          if (verseRef) {
+            const verseMatch = verseRef.match(/:(\d+)$/);
+            verseNumber = verseMatch ? verseMatch[1] : (index + 1).toString();
+          } else {
+            verseNumber = (index + 1).toString();
+          }
           
-          if (verseContent) {
-            content += `<p class="mb-4 leading-relaxed"><sup class="text-blue-600 dark:text-blue-400 font-medium text-sm mr-1">${verseNumber}</sup> ${verseContent}</p>`;
+          if (verseContent && verseContent.trim()) {
+            content += `<p class="mb-4 leading-relaxed"><sup class="text-blue-600 dark:text-blue-400 font-medium text-sm mr-1">${verseNumber}</sup> ${verseContent.trim()}</p>`;
           }
         } else if (typeof verse === 'string' && verse.trim()) {
           content += `<p class="mb-4 leading-relaxed"><sup class="text-blue-600 dark:text-blue-400 font-medium text-sm mr-1">${index + 1}</sup> ${verse}</p>`;
@@ -42,12 +49,21 @@ export class BibleContentParser {
         const verse = chapterData[verseKey];
         if (verse) {
           let verseText = '';
+          let verseNumber = verseKey;
           
           if (typeof verse === 'string') {
             verseText = verse;
           } else if (typeof verse === 'object' && verse !== null) {
-            // Handle nested verse objects
-            verseText = verse.text || verse.content || verse.verse || verse.t || verse.v || '';
+            // Handle the structure from your JSON files
+            verseText = verse.content || verse.text || verse.verse || verse.t || verse.v || '';
+            
+            // If there's a reference, extract the verse number from it
+            if (verse.reference) {
+              const verseMatch = verse.reference.match(/:(\d+)$/);
+              if (verseMatch) {
+                verseNumber = verseMatch[1];
+              }
+            }
             
             // If still no text, try other common patterns
             if (!verseText) {
@@ -64,7 +80,7 @@ export class BibleContentParser {
           if (verseText && verseText.trim() && verseText !== '{}') {
             // Clean up the verse text
             const cleanText = verseText.trim().replace(/\s+/g, ' ');
-            content += `<p class="mb-4 leading-relaxed"><sup class="text-blue-600 dark:text-blue-400 font-medium text-sm mr-1">${verseKey}</sup> ${cleanText}</p>`;
+            content += `<p class="mb-4 leading-relaxed"><sup class="text-blue-600 dark:text-blue-400 font-medium text-sm mr-1">${verseNumber}</sup> ${cleanText}</p>`;
           }
         }
       });
@@ -103,9 +119,9 @@ export class BibleContentParser {
     }
     
     if (typeof verseData === 'object' && verseData !== null) {
-      // Try common properties for verse text
-      return verseData.text || 
-             verseData.content || 
+      // Try common properties for verse text, including the structure from your JSON files
+      return verseData.content || 
+             verseData.text || 
              verseData.verse || 
              verseData.t || 
              verseData.v || 

@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BibleVersion, Book as BookType, Chapter } from '../../../services/comprehensiveBibleService';
 import { ReadingSettings, defaultReadingSettings } from '../types/readingSettings';
 import { useBibleNavigation } from '../../../hooks/useBibleNavigation';
-import { useBooks, useChapters, useBibleVersions } from '../../../hooks/useComprehensiveBibleData';
+import { useBooks, useChapters, useBibleVersions, useChapterText } from '../../../hooks/useComprehensiveBibleData';
 
 type ViewMode = 'books' | 'chapters' | 'verses';
 
@@ -17,6 +17,7 @@ interface BibleReaderContextType {
   currentVersion: BibleVersion | null;
   currentBook: BookType | null;
   currentChapter: Chapter | null;
+  chapterData: any;
   allChapters: Chapter[];
   setCurrentVersion: (version: BibleVersion) => void;
   setCurrentBook: (book: BookType | null) => void;
@@ -32,6 +33,8 @@ interface BibleReaderContextType {
   booksError: string | null;
   chaptersLoading: boolean;
   chaptersError: string | null;
+  chapterLoading: boolean;
+  chapterError: string | null;
 }
 
 const BibleReaderContext = createContext<BibleReaderContextType | null>(null);
@@ -82,6 +85,12 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
   const { chapters, loading: chaptersLoading, error: chaptersError } = useChapters(
     currentVersion?.id || selectedVersion.id, 
     currentBook?.id || null
+  );
+
+  // Fetch chapter text when current chapter changes
+  const { chapterData, loading: chapterLoading, error: chapterError } = useChapterText(
+    currentVersion?.id || selectedVersion.id,
+    currentChapter?.id || null
   );
 
   // Initialize current version
@@ -157,6 +166,7 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
     currentVersion: currentVersion || selectedVersion,
     currentBook,
     currentChapter,
+    chapterData,
     allChapters,
     setCurrentVersion,
     setCurrentBook,
@@ -171,7 +181,9 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
     booksLoading,
     booksError,
     chaptersLoading,
-    chaptersError
+    chaptersError,
+    chapterLoading,
+    chapterError
   };
 
   console.log('BibleReaderProvider providing context value:', {
@@ -181,7 +193,8 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
     viewMode: value.viewMode,
     booksCount: value.books.length,
     chaptersCount: value.chapters.length,
-    allChaptersCount: value.allChapters.length
+    allChaptersCount: value.allChapters.length,
+    hasChapterData: !!value.chapterData?.content
   });
 
   return (
