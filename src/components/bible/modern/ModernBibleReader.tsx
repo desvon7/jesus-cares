@@ -21,7 +21,10 @@ const ModernBibleReader: React.FC<ModernBibleReaderProps> = ({
     console.error('ModernBibleReader: selectedVersion is required');
     return (
       <div className="flex items-center justify-center h-screen">
-        <p>No Bible version selected</p>
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">No Bible Version Selected</h2>
+          <p className="text-gray-600">Please select a Bible version to continue.</p>
+        </div>
       </div>
     );
   }
@@ -32,7 +35,16 @@ const ModernBibleReader: React.FC<ModernBibleReaderProps> = ({
         selectedVersion={selectedVersion} 
         autoOpenGenesis={autoOpenGenesis}
       >
-        <ModernBibleInterface onBack={onBack} />
+        <React.Suspense fallback={
+          <div className="h-screen flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading Bible interface...</p>
+            </div>
+          </div>
+        }>
+          <ModernBibleInterface onBack={onBack} />
+        </React.Suspense>
       </BibleReaderProvider>
     </div>
   );

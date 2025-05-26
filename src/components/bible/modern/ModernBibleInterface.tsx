@@ -21,6 +21,33 @@ export const ModernBibleInterface: React.FC<ModernBibleInterfaceProps> = ({ onBa
   const [showBookSelector, setShowBookSelector] = useState(false);
   const [showChapterSelector, setShowChapterSelector] = useState(false);
 
+  // Add defensive check for context availability
+  let contextValue;
+  try {
+    contextValue = useBibleReaderContext();
+  } catch (error) {
+    console.error('Failed to get Bible reader context:', error);
+    return (
+      <div className="h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Loading Bible Reader...</h2>
+          <p className="text-gray-600">Please wait while we initialize the application.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!contextValue) {
+    return (
+      <div className="h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Initializing...</h2>
+          <p className="text-gray-600">Setting up Bible reader context.</p>
+        </div>
+      </div>
+    );
+  }
+
   const {
     currentVersion,
     currentBook,
@@ -34,7 +61,7 @@ export const ModernBibleInterface: React.FC<ModernBibleInterfaceProps> = ({ onBa
     versions,
     books,
     chapters
-  } = useBibleReaderContext();
+  } = contextValue;
 
   const handleVersionSelect = (version: any) => {
     setCurrentVersion(version);
