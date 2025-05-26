@@ -59,10 +59,7 @@ export const ModernReaderView: React.FC = () => {
 
   if (viewMode === 'verses' && currentBook && currentChapter) {
     return (
-      <ModernVersesReader
-        book={currentBook}
-        chapter={currentChapter}
-      />
+      <ModernVersesReader />
     );
   }
 

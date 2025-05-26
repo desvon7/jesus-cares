@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useBibleReaderContext } from './providers/BibleReaderProvider';
-import { useChapterText } from '../../hooks/useComprehensiveBibleData';
 import { VersesReaderHeader } from './components/VersesReaderHeader';
 import { VersesContent } from './components/VersesContent';
 import { VersesLoadingState } from './components/VersesLoadingState';
@@ -9,12 +8,10 @@ import { VersesErrorState } from './components/VersesErrorState';
 import { VersesNavigationFooter } from './components/VersesNavigationFooter';
 
 const VersesReader: React.FC = () => {
-  // Get all necessary state and functions directly from context
   const {
     currentVersion,
     currentBook,
     currentChapter,
-    readingSettings,
     goToPreviousChapter,
     goToNextChapter,
     canGoPrevious,
@@ -23,7 +20,9 @@ const VersesReader: React.FC = () => {
     setCurrentVersion,
     setCurrentBook,
     setCurrentChapter,
-    setViewMode
+    setViewMode,
+    chapterLoading,
+    chapterError
   } = useBibleReaderContext();
 
   // If no chapter is selected, show selection prompt
@@ -54,14 +53,12 @@ const VersesReader: React.FC = () => {
     );
   }
 
-  const { chapterData, loading, error } = useChapterText(currentBook.bibleId, currentChapter.id);
-
-  if (loading) {
+  if (chapterLoading) {
     return <VersesLoadingState />;
   }
 
-  if (error) {
-    return <VersesErrorState error={error} />;
+  if (chapterError) {
+    return <VersesErrorState error={chapterError} />;
   }
 
   const handleVersionChange = (version: any) => {
@@ -84,7 +81,7 @@ const VersesReader: React.FC = () => {
       <VersesReaderHeader 
         book={currentBook} 
         chapter={currentChapter} 
-        chapterData={chapterData}
+        chapterData={null}
         onBack={() => setViewMode('books')}
         selectedVersion={currentVersion}
         availableVersions={versions}
@@ -94,10 +91,7 @@ const VersesReader: React.FC = () => {
       />
       
       <div className="flex-1 pb-20">
-        <VersesContent 
-          chapterData={chapterData} 
-          readingSettings={readingSettings} 
-        />
+        <VersesContent />
       </div>
 
       <VersesNavigationFooter
