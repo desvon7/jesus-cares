@@ -4,7 +4,7 @@ export class BibleContentParser {
     console.log(`Parsing chapter content for ${bookName} ${chapterNum}`, { 
       dataType: typeof chapterData, 
       isArray: Array.isArray(chapterData),
-      keys: typeof chapterData === 'object' ? Object.keys(chapterData).slice(0, 5) : 'N/A'
+      keys: typeof chapterData === 'object' ? Object.keys(chapterData).slice(0, 10) : 'N/A'
     });
     
     let content = `<h3 class="text-2xl font-semibold mb-6 text-slate-900 dark:text-slate-100">${bookName} ${chapterNum}</h3>`;
@@ -13,7 +13,7 @@ export class BibleContentParser {
       console.log(`Processing ${chapterData.length} verses as array`);
       chapterData.forEach((verse, index) => {
         if (verse && typeof verse === 'object') {
-          const verseContent = verse.content || verse.text || verse.verse || '';
+          const verseContent = verse.content || verse.text || verse.verse || verse.t || '';
           const verseRef = verse.reference || '';
           
           const verseMatch = verseRef.match(/:(\d+)$/);
@@ -27,7 +27,7 @@ export class BibleContentParser {
         }
       });
     } else if (typeof chapterData === 'object' && chapterData !== null) {
-      console.log(`Processing verses as object with keys: ${Object.keys(chapterData).slice(0, 5).join(', ')}`);
+      console.log(`Processing verses as object with keys: ${Object.keys(chapterData).slice(0, 10).join(', ')}`);
       
       // Handle the actual JSON structure where verses are objects with verse numbers as keys
       const verseKeys = Object.keys(chapterData).sort((a, b) => {
@@ -35,6 +35,8 @@ export class BibleContentParser {
         const numB = parseInt(b) || 0;
         return numA - numB;
       });
+      
+      console.log(`Found ${verseKeys.length} verse keys:`, verseKeys.slice(0, 5));
       
       verseKeys.forEach((verseKey) => {
         const verse = chapterData[verseKey];
@@ -44,14 +46,28 @@ export class BibleContentParser {
           if (typeof verse === 'object' && verse !== null) {
             // Handle nested verse objects - check for common properties
             verseText = verse.text || verse.content || verse.verse || verse.t || verse.v || '';
-            if (!verseText && verse.text !== undefined) {
-              verseText = String(verse.text);
+            
+            // If it's still an object, try to extract text from common patterns
+            if (!verseText && typeof verse === 'object') {
+              // Some files might have the verse text directly as a property
+              const possibleKeys = ['text', 'content', 'verse', 't', 'v', 'value'];
+              for (const key of possibleKeys) {
+                if (verse[key] && typeof verse[key] === 'string') {
+                  verseText = verse[key];
+                  break;
+                }
+              }
+              
+              // If still no text found, convert object to string as last resort
+              if (!verseText) {
+                verseText = JSON.stringify(verse);
+              }
             }
           } else if (typeof verse === 'string') {
             verseText = verse;
           }
           
-          if (verseText && verseText.trim()) {
+          if (verseText && verseText.trim() && verseText !== '{}') {
             // Clean up the verse text
             const cleanText = verseText.trim().replace(/\s+/g, ' ');
             content += `<p class="mb-4 leading-relaxed"><sup class="text-blue-600 dark:text-blue-400 font-medium text-sm mr-1">${verseKey}</sup> ${cleanText}</p>`;
@@ -67,13 +83,14 @@ export class BibleContentParser {
         }
       });
     } else {
-      console.warn('Could not parse chapter data - unknown format');
+      console.warn('Could not parse chapter data - unknown format', { chapterData });
       content += `<div class="text-center py-12">
         <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
           <span class="text-slate-400 text-xl">📖</span>
         </div>
         <p class="text-slate-500 dark:text-slate-400 font-medium">Scripture content not available in this format.</p>
         <p class="text-sm text-slate-400 mt-2">The data structure for this version may need additional parsing.</p>
+        <p class="text-sm text-slate-400 mt-2">Try versions like KJV, ESV, NIV, NASB, or NLT which should have content available.</p>
       </div>`;
     }
 

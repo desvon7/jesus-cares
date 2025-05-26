@@ -28,7 +28,28 @@ export class BibleDataFetcher {
     try {
       console.log(`Loading books for ${bibleId} from scripture data...`);
       
-      const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
+      // Try with fallbacks for different file naming conventions
+      const fallbackIds = [
+        bibleId.toLowerCase(),
+        bibleId.toUpperCase(),
+        bibleId
+      ].filter((id, index, arr) => arr.indexOf(id) === index);
+
+      let bibleData = null;
+      for (const id of fallbackIds) {
+        try {
+          bibleData = await this.githubService.fetchFromGitHub(`${id}.json`);
+          console.log(`Successfully loaded data using ID: ${id}`);
+          break;
+        } catch (error) {
+          console.log(`Failed to load with ID ${id}, trying next...`);
+          continue;
+        }
+      }
+
+      if (!bibleData) {
+        throw new Error(`Could not load Bible data for any variant of ${bibleId}`);
+      }
       
       // Handle different JSON structures - some have books wrapper, some don't
       let booksData = bibleData;
@@ -64,7 +85,27 @@ export class BibleDataFetcher {
     try {
       console.log(`Loading chapters for ${bibleId}:${bookId} from scripture data...`);
       
-      const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
+      // Try with fallbacks for different file naming conventions
+      const fallbackIds = [
+        bibleId.toLowerCase(),
+        bibleId.toUpperCase(), 
+        bibleId
+      ].filter((id, index, arr) => arr.indexOf(id) === index);
+
+      let bibleData = null;
+      for (const id of fallbackIds) {
+        try {
+          bibleData = await this.githubService.fetchFromGitHub(`${id}.json`);
+          break;
+        } catch (error) {
+          continue;
+        }
+      }
+
+      if (!bibleData) {
+        throw new Error(`Could not load Bible data for ${bibleId}`);
+      }
+
       const bookKey = bookId.toLowerCase();
       
       // Handle different JSON structures
@@ -96,21 +137,51 @@ export class BibleDataFetcher {
       const [, bookId, chapterNum] = chapterId.split('.');
       console.log(`Loading scripture text for ${bibleId}:${bookId}:${chapterNum}...`);
       
-      const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
+      // Try with fallbacks for different file naming conventions
+      const fallbackIds = [
+        bibleId.toLowerCase(),
+        bibleId.toUpperCase(),
+        bibleId
+      ].filter((id, index, arr) => arr.indexOf(id) === index);
+
+      let bibleData = null;
+      let successfulId = null;
+      
+      for (const id of fallbackIds) {
+        try {
+          console.log(`Trying to fetch ${id}.json...`);
+          bibleData = await this.githubService.fetchFromGitHub(`${id}.json`);
+          successfulId = id;
+          console.log(`Successfully loaded ${id}.json`);
+          break;
+        } catch (error) {
+          console.log(`Failed to load ${id}.json:`, error.message);
+          continue;
+        }
+      }
+
+      if (!bibleData) {
+        throw new Error(`Could not load Bible data for any variant of ${bibleId}: ${fallbackIds.join(', ')}`);
+      }
+
       const bookKey = bookId.toLowerCase();
       
       // Handle different JSON structures
       let booksData = bibleData.books || bibleData;
       
+      console.log(`Looking for book "${bookKey}" in data from ${successfulId}.json`);
+      console.log(`Available books:`, Object.keys(booksData).slice(0, 10));
+      
       if (booksData && booksData[bookKey] && booksData[bookKey][chapterNum]) {
         const chapterData = booksData[bookKey][chapterNum];
         const bookName = BibleBookMapper.getBookName(bookKey);
         
-        console.log(`Successfully loaded scripture for ${bibleId}:${bookId}:${chapterNum}`, {
+        console.log(`Successfully loaded scripture data for ${bibleId}:${bookId}:${chapterNum}`, {
           dataType: typeof chapterData,
           isArray: Array.isArray(chapterData),
           keyCount: typeof chapterData === 'object' ? Object.keys(chapterData).length : 0,
-          sampleKeys: typeof chapterData === 'object' ? Object.keys(chapterData).slice(0, 5) : []
+          sampleKeys: typeof chapterData === 'object' ? Object.keys(chapterData).slice(0, 5) : [],
+          hasVerses: typeof chapterData === 'object' && Object.keys(chapterData).some(key => !isNaN(parseInt(key)))
         });
         
         const content = BibleContentParser.parseChapterContent(chapterData, bookName, chapterNum);
@@ -123,7 +194,8 @@ export class BibleDataFetcher {
         };
       }
       
-      throw new Error('Scripture chapter not found in data');
+      console.log(`Chapter not found: ${bookKey}[${chapterNum}] in ${successfulId}.json`);
+      throw new Error(`Scripture chapter not found in data: ${bookKey} ${chapterNum}`);
     } catch (error) {
       console.error(`Error loading scripture text for ${chapterId}:`, error);
       throw error;

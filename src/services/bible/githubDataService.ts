@@ -54,9 +54,30 @@ export class GitHubDataService {
   async validateFileExists(filename: string): Promise<boolean> {
     try {
       const response = await fetch(`${this.baseUrl}/${filename}`, { method: 'HEAD' });
-      return response.ok;
-    } catch {
+      const exists = response.ok;
+      console.log(`File ${filename} exists: ${exists}`);
+      return exists;
+    } catch (error) {
+      console.log(`Error checking file ${filename}:`, error);
       return false;
     }
+  }
+
+  async fetchWithFallbacks(primaryPath: string, fallbackPaths: string[] = []): Promise<any> {
+    const allPaths = [primaryPath, ...fallbackPaths];
+    
+    for (const path of allPaths) {
+      try {
+        console.log(`Attempting to fetch: ${path}`);
+        const data = await this.fetchFromGitHub(path);
+        console.log(`Successfully loaded data from: ${path}`);
+        return data;
+      } catch (error) {
+        console.log(`Failed to fetch ${path}, trying next option...`);
+        continue;
+      }
+    }
+    
+    throw new Error(`Failed to fetch data from any of the attempted paths: ${allPaths.join(', ')}`);
   }
 }
