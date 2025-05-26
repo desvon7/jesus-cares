@@ -1,8 +1,5 @@
 
 import React from 'react';
-import { Home } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { Book, Chapter } from '../../../../services/comprehensiveBibleService';
 import { useChapterText } from '../../../../hooks/useComprehensiveBibleData';
 import { useBibleReaderContext } from '../../providers/BibleReaderProvider';
@@ -16,13 +13,8 @@ export const ModernVersesReader: React.FC<ModernVersesReaderProps> = ({
   book,
   chapter
 }) => {
-  const navigate = useNavigate();
   const { chapterData, loading, error } = useChapterText(book.bibleId, chapter.id);
   const { readingSettings } = useBibleReaderContext();
-
-  const handleHomeClick = () => {
-    navigate('/');
-  };
 
   if (loading) {
     return (
@@ -77,7 +69,7 @@ export const ModernVersesReader: React.FC<ModernVersesReaderProps> = ({
   };
 
   // Log chapter data for debugging
-  console.log('ModernVersesReader - Chapter Data:', {
+  console.log('ModernVersesReader - Scripture Data:', {
     hasContent: !!chapterData?.content,
     contentType: typeof chapterData?.content,
     contentLength: chapterData?.content?.length || 0,
@@ -105,19 +97,6 @@ export const ModernVersesReader: React.FC<ModernVersesReaderProps> = ({
           />
         ) : (
           <div className="text-center py-16">
-            {/* Home button */}
-            <div className="mb-8">
-              <Button
-                variant="ghost"
-                onClick={handleHomeClick}
-                className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-full px-4 py-2 flex items-center space-x-2 mx-auto"
-              >
-                <Home className="h-4 w-4" />
-                <span>Home</span>
-              </Button>
-            </div>
-
-            {/* Error state content */}
             <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-gray-700 dark:to-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-8">
               <span className="text-gray-600 dark:text-gray-300 text-3xl">📖</span>
             </div>

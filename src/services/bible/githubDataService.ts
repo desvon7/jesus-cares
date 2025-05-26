@@ -4,7 +4,7 @@ export class GitHubDataService {
 
   async fetchFromGitHub(path: string) {
     const url = `${this.baseUrl}/${path}`;
-    console.log(`Fetching from local data: ${url}`);
+    console.log(`Fetching scripture data from: ${url}`);
     
     try {
       const response = await fetch(url);
@@ -13,20 +13,24 @@ export class GitHubDataService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log(`Successfully fetched ${path}. Data structure:`, {
+      
+      // Log the actual structure we received
+      console.log(`Successfully loaded ${path}:`, {
         type: typeof data,
-        hasContent: !!data,
-        sampleKeys: Object.keys(data).slice(0, 3)
+        hasBooks: !!data.books,
+        directStructure: typeof data === 'object' && !data.books ? Object.keys(data).slice(0, 5) : null,
+        sampleKeys: data.books ? Object.keys(data.books).slice(0, 3) : Object.keys(data).slice(0, 3)
       });
+      
       return data;
     } catch (error) {
-      console.error(`Failed to fetch ${path}:`, error);
+      console.error(`Failed to fetch scripture from ${path}:`, error);
       throw error;
     }
   }
 
   async fetchDirectoryListing(): Promise<string[]> {
-    // Return the actual files that exist in the data directory
+    // Return the actual Bible translation files that exist in the data directory
     const availableFiles = [
       'amp.json', 'ampc.json', 'asv.json', 'bsb.json', 'ceb.json', 'cev.json', 
       'cevdci.json', 'cevuk.json', 'cjb.json', 'cpdv.json', 'csb.json', 'darby.json',
@@ -43,7 +47,7 @@ export class GitHubDataService {
       'ylt98.json'
     ];
 
-    console.log(`Available Bible files: ${availableFiles.length} versions`);
+    console.log(`Available Bible translation files: ${availableFiles.length} versions`);
     return availableFiles;
   }
 

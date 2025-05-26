@@ -16,7 +16,7 @@ export class BibleDataFetcher {
 
   async fetchVersionsFromGitHub(): Promise<BibleVersion[]> {
     try {
-      console.log('Discovering Bible versions from local data files...');
+      console.log('Discovering Bible versions from local scripture files...');
       return await this.versionDiscovery.discoverVersionsFromFiles();
     } catch (error) {
       console.error('Error fetching versions from local data:', error);
@@ -26,13 +26,18 @@ export class BibleDataFetcher {
 
   async fetchBooksFromGitHub(bibleId: string): Promise<Book[]> {
     try {
-      console.log(`Attempting to fetch books for ${bibleId} from local data...`);
+      console.log(`Loading books for ${bibleId} from scripture data...`);
       
       const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
       
-      if (bibleData && typeof bibleData === 'object') {
-        const books = Object.keys(bibleData).map((bookKey, index) => {
-          const bookData = bibleData[bookKey];
+      // Handle different JSON structures - some have books wrapper, some don't
+      let booksData = bibleData;
+      if (bibleData.books) {
+        booksData = bibleData.books;
+      }
+      
+      if (booksData && typeof booksData === 'object') {
+        const books = Object.keys(booksData).map((bookKey, index) => {
           const bookName = BibleBookMapper.getBookName(bookKey);
           
           return {
@@ -44,26 +49,29 @@ export class BibleDataFetcher {
           };
         });
         
-        console.log(`Found ${books.length} books for ${bibleId}`);
+        console.log(`Successfully loaded ${books.length} books for ${bibleId}:`, books.slice(0, 3).map(b => b.name));
         return books;
       }
       
-      throw new Error('Invalid Bible data format');
+      throw new Error('Invalid scripture data format');
     } catch (error) {
-      console.error(`Error fetching books for ${bibleId}:`, error);
+      console.error(`Error loading books for ${bibleId}:`, error);
       throw error;
     }
   }
 
   async fetchChaptersFromGitHub(bibleId: string, bookId: string): Promise<Chapter[]> {
     try {
-      console.log(`Attempting to fetch chapters for ${bibleId}:${bookId} from local data...`);
+      console.log(`Loading chapters for ${bibleId}:${bookId} from scripture data...`);
       
       const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
       const bookKey = bookId.toLowerCase();
       
-      if (bibleData && bibleData[bookKey]) {
-        const bookData = bibleData[bookKey];
+      // Handle different JSON structures
+      let booksData = bibleData.books || bibleData;
+      
+      if (booksData && booksData[bookKey]) {
+        const bookData = booksData[bookKey];
         const chapters = Object.keys(bookData).map((chapterKey) => ({
           id: `${bibleId}.${bookId}.${chapterKey}`,
           bibleId,
@@ -72,13 +80,13 @@ export class BibleDataFetcher {
           reference: `${BibleBookMapper.getBookName(bookKey)} ${chapterKey}`
         }));
         
-        console.log(`Found ${chapters.length} chapters for ${bibleId}:${bookId}`);
+        console.log(`Successfully loaded ${chapters.length} chapters for ${bibleId}:${bookId}`);
         return chapters;
       }
       
-      throw new Error('Book not found in Bible data');
+      throw new Error('Book not found in scripture data');
     } catch (error) {
-      console.error(`Error fetching chapters for ${bibleId}:${bookId}:`, error);
+      console.error(`Error loading chapters for ${bibleId}:${bookId}:`, error);
       throw error;
     }
   }
@@ -86,22 +94,23 @@ export class BibleDataFetcher {
   async fetchChapterTextFromGitHub(bibleId: string, chapterId: string): Promise<any> {
     try {
       const [, bookId, chapterNum] = chapterId.split('.');
-      console.log(`Attempting to fetch chapter text for ${bibleId}:${bookId}:${chapterNum} from local data...`);
+      console.log(`Loading scripture text for ${bibleId}:${bookId}:${chapterNum}...`);
       
       const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
       const bookKey = bookId.toLowerCase();
       
-      if (bibleData && bibleData[bookKey] && bibleData[bookKey][chapterNum]) {
-        const chapterData = bibleData[bookKey][chapterNum];
+      // Handle different JSON structures
+      let booksData = bibleData.books || bibleData;
+      
+      if (booksData && booksData[bookKey] && booksData[bookKey][chapterNum]) {
+        const chapterData = booksData[bookKey][chapterNum];
         const bookName = BibleBookMapper.getBookName(bookKey);
         
-        console.log(`Raw chapter data structure for ${bibleId}:${bookId}:${chapterNum}:`, {
-          type: typeof chapterData,
+        console.log(`Successfully loaded scripture for ${bibleId}:${bookId}:${chapterNum}`, {
+          dataType: typeof chapterData,
           isArray: Array.isArray(chapterData),
-          keys: typeof chapterData === 'object' ? Object.keys(chapterData).slice(0, 10) : 'N/A',
-          sampleData: typeof chapterData === 'object' ? 
-            Object.entries(chapterData).slice(0, 2).map(([k, v]) => ({ [k]: typeof v === 'string' ? v.substring(0, 50) + '...' : v })) : 
-            'N/A'
+          keyCount: typeof chapterData === 'object' ? Object.keys(chapterData).length : 0,
+          sampleKeys: typeof chapterData === 'object' ? Object.keys(chapterData).slice(0, 5) : []
         });
         
         const content = BibleContentParser.parseChapterContent(chapterData, bookName, chapterNum);
@@ -114,9 +123,9 @@ export class BibleDataFetcher {
         };
       }
       
-      throw new Error('Chapter not found in Bible data');
+      throw new Error('Scripture chapter not found in data');
     } catch (error) {
-      console.error(`Error fetching chapter text for ${chapterId}:`, error);
+      console.error(`Error loading scripture text for ${chapterId}:`, error);
       throw error;
     }
   }

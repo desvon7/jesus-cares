@@ -45,59 +45,64 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({
           <ArrowLeft className="h-5 w-5" />
         </Button>
 
-        {/* Center - Navigation */}
-        <div className="flex items-center space-x-1 flex-1 justify-center">
-          {/* Version selector */}
-          <Button
-            variant="ghost"
-            onClick={onVersionSelect}
-            className="text-blue-500 font-semibold px-3 py-2 rounded-full hover:bg-blue-50 dark:hover:bg-blue-950 flex items-center space-x-1"
-          >
-            <span>{currentVersion?.abbreviation || 'KJV'}</span>
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-
-          {/* Book selector */}
-          {currentBook && (
-            <>
-              <span className="text-gray-400 mx-1">›</span>
-              <Button
-                variant="ghost"
-                onClick={onBookSelect}
-                className="text-gray-900 dark:text-gray-100 font-medium px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center space-x-1"
-              >
-                <span>{currentBook.name}</span>
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-
-          {/* Chapter selector */}
-          {currentChapter && (
-            <>
-              <span className="text-gray-400 mx-1">›</span>
-              <Button
-                variant="ghost"
-                onClick={onChapterSelect}
-                className="text-gray-900 dark:text-gray-100 font-medium px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center space-x-1"
-              >
-                <span>Ch. {currentChapter.number}</span>
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-        </div>
-
-        {/* Right - Actions */}
-        <div className="flex items-center space-x-2">
+        {/* Center - Home button and Navigation */}
+        <div className="flex items-center space-x-4 flex-1 justify-center">
+          {/* Home button centered */}
           <Button
             variant="ghost"
             size="sm"
             onClick={handleHomeClick}
-            className="text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full p-2"
+            className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-full p-2"
           >
             <Home className="h-5 w-5" />
           </Button>
+
+          {/* Navigation breadcrumb */}
+          <div className="flex items-center space-x-1">
+            {/* Version selector */}
+            <Button
+              variant="ghost"
+              onClick={onVersionSelect}
+              className="text-blue-500 font-semibold px-3 py-2 rounded-full hover:bg-blue-50 dark:hover:bg-blue-950 flex items-center space-x-1"
+            >
+              <span>{currentVersion?.abbreviation || 'KJV'}</span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+
+            {/* Book selector */}
+            {currentBook && (
+              <>
+                <span className="text-gray-400 mx-1">›</span>
+                <Button
+                  variant="ghost"
+                  onClick={onBookSelect}
+                  className="text-gray-900 dark:text-gray-100 font-medium px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center space-x-1"
+                >
+                  <span>{currentBook.name}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+
+            {/* Chapter selector */}
+            {currentChapter && (
+              <>
+                <span className="text-gray-400 mx-1">›</span>
+                <Button
+                  variant="ghost"
+                  onClick={onChapterSelect}
+                  className="text-gray-900 dark:text-gray-100 font-medium px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center space-x-1"
+                >
+                  <span>Ch. {currentChapter.number}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Right - Actions */}
+        <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
             size="sm"
