@@ -125,6 +125,18 @@ export const BibleReaderContent: React.FC<BibleReaderContentProps> = ({ selected
               onNextChapter={goToNextChapter}
               canGoPrevious={canGoPrevious}
               canGoNext={canGoNext}
+              selectedVersion={currentVersion || selectedVersion}
+              availableVersions={versions}
+              onVersionChange={handleVersionChange}
+              onBookSelect={() => {
+                setCurrentBook(null);
+                setCurrentChapter(null);
+                setViewMode('books');
+              }}
+              onChapterSelect={() => {
+                setCurrentChapter(null);
+                setViewMode('chapters');
+              }}
             />
           )}
         </div>
