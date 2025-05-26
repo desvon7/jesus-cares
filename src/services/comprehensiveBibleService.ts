@@ -1,4 +1,3 @@
-
 import { BibleVersion, Book, Chapter, Verse } from '../types/bibleTypes';
 import { STATIC_BIBLE_VERSIONS } from '../data/staticBibleVersions';
 import { STANDARD_BOOKS, CHAPTER_COUNTS } from '../data/standardBooks';
@@ -7,6 +6,7 @@ import { BibleCache } from './bibleCache';
 class ComprehensiveBibleService {
   private cache = new BibleCache();
   private githubService: any;
+  private githubRepo = 'your-username/bible-data'; // Update this with your actual repo
 
   constructor() {
     // Import the GitHub service
@@ -15,21 +15,66 @@ class ComprehensiveBibleService {
     });
   }
 
+  private async fetchFromGitHub(path: string) {
+    const url = `https://raw.githubusercontent.com/${this.githubRepo}/main/${path}`;
+    console.log(`Fetching from GitHub: ${url}`);
+    
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const data = await response.json();
+      console.log(`Successfully fetched ${path}:`, data);
+      return data;
+    } catch (error) {
+      console.error(`Failed to fetch ${path}:`, error);
+      throw error;
+    }
+  }
+
   async getBibleVersions(): Promise<BibleVersion[]> {
     const cacheKey = 'all_versions';
     const cachedData = this.cache.getCachedData(cacheKey);
     
     if (cachedData) {
+      console.log('Using cached versions');
       return cachedData;
     }
 
+    console.log('Fetching Bible versions from GitHub...');
+
     try {
+      // Try to fetch versions from GitHub bible-data repo
+      const githubVersions = await this.fetchFromGitHub('versions.json');
+      
+      // Transform GitHub data to match our interface
+      const versions: BibleVersion[] = githubVersions.map((version: any) => ({
+        id: version.id,
+        name: version.name,
+        nameLocal: version.nameLocal || version.name,
+        abbreviation: version.abbreviation,
+        abbreviationLocal: version.abbreviationLocal || version.abbreviation,
+        description: version.description || `${version.name} Bible translation`,
+        language: {
+          id: version.language?.id || 'en',
+          name: version.language?.name || 'English',
+          nameLocal: version.language?.nameLocal || 'English',
+          script: version.language?.script || 'Latin',
+          scriptDirection: version.language?.scriptDirection || 'ltr'
+        },
+        source: 'github-data' as const
+      }));
+
+      console.log(`Found ${versions.length} versions from GitHub`);
+      this.cache.setCachedData(cacheKey, versions);
+      return versions;
+    } catch (error) {
+      console.error('Error fetching from GitHub, falling back to static versions:', error);
+      // Fallback to static versions
       let allVersions = [...STATIC_BIBLE_VERSIONS];
       this.cache.setCachedData(cacheKey, allVersions);
       return allVersions;
-    } catch (error) {
-      console.error('Error fetching Bible versions:', error);
-      return STATIC_BIBLE_VERSIONS;
     }
   }
 
@@ -38,22 +83,35 @@ class ComprehensiveBibleService {
     const cachedData = this.cache.getCachedData(cacheKey);
     
     if (cachedData) {
+      console.log(`Using cached books for ${bibleId}`);
       return cachedData;
     }
 
+    console.log(`Fetching books for ${bibleId} from GitHub...`);
+
     try {
+      // Try to fetch books from GitHub
+      const githubBooks = await this.fetchFromGitHub(`${bibleId}/books.json`);
+      
+      const books: Book[] = githubBooks.map((book: any) => ({
+        id: book.id,
+        bibleId,
+        abbreviation: book.abbreviation,
+        name: book.name,
+        nameLong: book.nameLong || book.name
+      }));
+
+      console.log(`Found ${books.length} books for ${bibleId}`);
+      this.cache.setCachedData(cacheKey, books);
+      return books;
+    } catch (error) {
+      console.error(`Error fetching books for ${bibleId}, falling back to standard books:`, error);
+      // Fallback to standard books
       const books = STANDARD_BOOKS.map(book => ({
         ...book,
         bibleId
       }));
       this.cache.setCachedData(cacheKey, books);
-      return books;
-    } catch (error) {
-      console.error('Error fetching books:', error);
-      const books = STANDARD_BOOKS.map(book => ({
-        ...book,
-        bibleId
-      }));
       return books;
     }
   }
@@ -63,10 +121,30 @@ class ComprehensiveBibleService {
     const cachedData = this.cache.getCachedData(cacheKey);
     
     if (cachedData) {
+      console.log(`Using cached chapters for ${bibleId}:${bookId}`);
       return cachedData;
     }
 
+    console.log(`Fetching chapters for ${bibleId}:${bookId} from GitHub...`);
+
     try {
+      // Try to fetch chapters from GitHub
+      const githubChapters = await this.fetchFromGitHub(`${bibleId}/${bookId}/chapters.json`);
+      
+      const chapters: Chapter[] = githubChapters.map((chapter: any) => ({
+        id: `${bibleId}.${bookId}.${chapter.number}`,
+        bibleId,
+        bookId,
+        number: String(chapter.number),
+        reference: `${bookId} ${chapter.number}`
+      }));
+
+      console.log(`Found ${chapters.length} chapters for ${bibleId}:${bookId}`);
+      this.cache.setCachedData(cacheKey, chapters);
+      return chapters;
+    } catch (error) {
+      console.error(`Error fetching chapters for ${bibleId}:${bookId}, falling back to standard:`, error);
+      // Fallback to standard chapter counts
       const chapterCounts = CHAPTER_COUNTS[bookId] || 1;
       const chapters = Array.from({ length: chapterCounts }, (_, i) => ({
         id: `${bibleId}.${bookId}.${i + 1}`,
@@ -77,15 +155,6 @@ class ComprehensiveBibleService {
       }));
       this.cache.setCachedData(cacheKey, chapters);
       return chapters;
-    } catch (error) {
-      console.error('Error fetching chapters:', error);
-      return [{
-        id: `${bibleId}.${bookId}.1`,
-        bibleId,
-        bookId,
-        number: '1',
-        reference: `${bookId} 1`
-      }];
     }
   }
 
@@ -98,9 +167,29 @@ class ComprehensiveBibleService {
       return cachedData;
     }
 
-    console.log(`Fetching chapter text for ${bibleId}:${chapterId}`);
+    console.log(`Fetching chapter text for ${bibleId}:${chapterId} from GitHub...`);
 
     try {
+      const [, bookId, chapterNum] = chapterId.split('.');
+      
+      // Try to fetch chapter content from GitHub
+      const githubChapter = await this.fetchFromGitHub(`${bibleId}/${bookId}/chapter-${chapterNum}.json`);
+      
+      const book = STANDARD_BOOKS.find(b => b.id === bookId);
+      const chapterData = {
+        id: chapterId,
+        bibleId,
+        reference: `${book?.name || bookId} ${chapterNum}`,
+        content: githubChapter.content || githubChapter.text || 'No content available'
+      };
+
+      console.log(`Successfully fetched chapter text for ${bibleId}:${chapterId}`);
+      this.cache.setCachedData(cacheKey, chapterData);
+      return chapterData;
+    } catch (error) {
+      console.error(`Error fetching chapter text for ${bibleId}:${chapterId}:`, error);
+      
+      // Fallback logic for other sources
       const version = STATIC_BIBLE_VERSIONS.find(v => v.id === bibleId);
       const [, bookId, chapterNum] = chapterId.split('.');
       const book = STANDARD_BOOKS.find(b => b.id === bookId);
@@ -157,13 +246,6 @@ class ComprehensiveBibleService {
         }
       }
 
-      throw new Error(`No working service available for ${bibleId}`);
-    } catch (error) {
-      console.error('Error fetching chapter text:', error);
-      
-      const [, bookId, chapterNum] = chapterId.split('.');
-      const book = STANDARD_BOOKS.find(b => b.id === bookId);
-      
       return {
         id: chapterId,
         bibleId,
