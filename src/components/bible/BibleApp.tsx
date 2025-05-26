@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { BibleVersionSelector } from './BibleVersionSelector';
+import BibleVersionSelector from './BibleVersionSelector';
 import ModernBibleReader from './modern/ModernBibleReader';
 import { BibleVersion } from '../../services/comprehensiveBibleService';
 
