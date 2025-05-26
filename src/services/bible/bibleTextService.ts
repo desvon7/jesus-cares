@@ -1,4 +1,3 @@
-
 import { BibleVersion, Book, Chapter, Verse } from '../../types/bibleTypes';
 import { STATIC_BIBLE_VERSIONS } from '../../data/staticBibleVersions';
 import { STANDARD_BOOKS } from '../../data/standardBooks';
@@ -35,31 +34,40 @@ export class BibleTextService {
     if (version) {
       console.log(`Found version: ${version.name} (${version.source})`);
 
-      // Try bible-data repository first if it's a github-data source
+      // PRIORITY 1: Try bible-data repository for real scripture
       if (version.source === 'github-data') {
         try {
-          console.log(`Trying bible-data repository for ${bibleId}`);
+          console.log(`Fetching REAL scripture from bible-data repository for ${bibleId}`);
           const content = await bibleDataFetcher.fetchChapterTextFromGitHub(bibleId, chapterId);
-          this.cache.setCachedData(cacheKey, content);
-          return content;
+          
+          // Verify we got real content (not placeholder)
+          if (content && content.content && !content.content.includes('Sample verse') && !content.content.includes('enhanced content')) {
+            console.log(`SUCCESS: Retrieved real scripture for ${bibleId}:${chapterId}`);
+            this.cache.setCachedData(cacheKey, content);
+            return content;
+          } else {
+            console.warn(`Retrieved content appears to be placeholder for ${bibleId}:${chapterId}`);
+          }
         } catch (error) {
-          console.warn(`bible-data repository failed for ${bibleId}:`, error);
+          console.error(`FAILED: bible-data repository fetch for ${bibleId}:`, error);
         }
       }
 
-      // Try GitHub sources for enhanced versions
+      // PRIORITY 2: Try GitHub sources for enhanced versions
       if (version.source === 'github-unfolding' && this.githubService) {
         try {
           console.log(`Trying GitHub unfoldingWord for ${bibleId}`);
           const content = await this.githubService.getUnfoldingWordChapter(bibleId, bookId, parseInt(chapterNum));
-          const chapterData = {
-            id: chapterId,
-            bibleId,
-            reference: `${book?.name} ${chapterNum}`,
-            content
-          };
-          this.cache.setCachedData(cacheKey, chapterData);
-          return chapterData;
+          if (content && !content.includes('Sample verse')) {
+            const chapterData = {
+              id: chapterId,
+              bibleId,
+              reference: `${book?.name} ${chapterNum}`,
+              content
+            };
+            this.cache.setCachedData(cacheKey, chapterData);
+            return chapterData;
+          }
         } catch (error) {
           console.warn(`GitHub unfoldingWord failed for ${bibleId}:`, error);
         }
@@ -69,40 +77,31 @@ export class BibleTextService {
         try {
           console.log(`Trying GitHub STEPBible for ${bibleId}`);
           const content = await this.githubService.getSTEPBibleChapter(bibleId, bookId, parseInt(chapterNum));
-          const chapterData = {
-            id: chapterId,
-            bibleId,
-            reference: `${book?.name} ${chapterNum}`,
-            content
-          };
-          this.cache.setCachedData(cacheKey, chapterData);
-          return chapterData;
+          if (content && !content.includes('Sample verse')) {
+            const chapterData = {
+              id: chapterId,
+              bibleId,
+              reference: `${book?.name} ${chapterNum}`,
+              content
+            };
+            this.cache.setCachedData(cacheKey, chapterData);
+            return chapterData;
+          }
         } catch (error) {
           console.warn(`GitHub STEPBible failed for ${bibleId}:`, error);
         }
       }
-
-      // Enhanced placeholder content for demonstration
-      if (version.source === 'static') {
-        console.log(`Using enhanced content for ${bibleId}`);
-        const chapterData = {
-          id: chapterId,
-          bibleId,
-          reference: `${book?.name} ${chapterNum}`,
-          content: contentGenerator.generateEnhancedContent(book?.name || bookId, chapterNum, version.name)
-        };
-        this.cache.setCachedData(cacheKey, chapterData);
-        return chapterData;
-      }
     }
 
-    // Default fallback
+    // LAST RESORT: Placeholder content with clear indication
+    console.warn(`FALLBACK: No real scripture found for ${bibleId}:${chapterId}, using placeholder`);
     const chapterData = {
       id: chapterId,
       bibleId,
       reference: `${book?.name || bookId} ${chapterNum}`,
-      content: contentGenerator.generateEnhancedContent(book?.name || bookId, chapterNum, 'Bible')
+      content: `<h3>${book?.name || bookId} ${chapterNum}</h3><p><em>Scripture content not available. This version may not have real text data in the repository.</em></p><p>Available sources with real scripture: ${STATIC_BIBLE_VERSIONS.filter(v => v.source === 'github-data').map(v => v.abbreviation).join(', ')}</p>`
     };
+    
     this.cache.setCachedData(cacheKey, chapterData);
     return chapterData;
   }
