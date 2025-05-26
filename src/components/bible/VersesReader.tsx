@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Copy, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Book, Chapter } from '../../services/comprehensiveBibleService';
 import { useChapterText } from '../../hooks/useComprehensiveBibleData';
 
@@ -29,6 +31,7 @@ const VersesReader: React.FC<VersesReaderProps> = ({
   onBack,
   readingSettings
 }) => {
+  const isMobile = useIsMobile();
   const { chapterData, loading, error } = useChapterText(book.bibleId, chapter.id);
   const { toast } = useToast();
 
@@ -67,7 +70,7 @@ const VersesReader: React.FC<VersesReaderProps> = ({
       case 'sans-serif':
         return 'font-sans';
       case 'dyslexic':
-        return 'font-mono'; // Using mono as a placeholder for dyslexic-friendly font
+        return 'font-mono';
       default:
         return 'font-serif';
     }
@@ -80,12 +83,10 @@ const VersesReader: React.FC<VersesReaderProps> = ({
 
   const processContent = (content: string) => {
     if (!readingSettings.showVerseNumbers) {
-      // Remove verse numbers but keep the text
       content = content.replace(/<sup[^>]*>\d+<\/sup>/g, '');
     }
     
     if (!readingSettings.showChapterNumbers) {
-      // Remove chapter numbers
       content = content.replace(/<h3[^>]*>Chapter \d+<\/h3>/g, '');
     }
     
@@ -105,7 +106,7 @@ const VersesReader: React.FC<VersesReaderProps> = ({
     return (
       <div className="text-center py-12">
         <p className="text-red-500 mb-4">{error}</p>
-        <Button onClick={onBack}>Go Back</Button>
+        {!isMobile && <Button onClick={onBack}>Go Back</Button>}
       </div>
     );
   }
@@ -113,35 +114,37 @@ const VersesReader: React.FC<VersesReaderProps> = ({
   return (
     <div className="max-w-4xl mx-auto">
       <Card className="border-0 shadow-none bg-transparent">
-        <CardHeader className="text-center pb-6">
-          <CardTitle className="text-3xl font-bold mb-4">
+        <CardHeader className={`text-center ${isMobile ? 'pb-4' : 'pb-6'}`}>
+          <CardTitle className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold mb-4`}>
             {book.name} {chapter.number}
           </CardTitle>
-          <div className="flex justify-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCopyChapter}
-              className="flex items-center space-x-1"
-            >
-              <Copy className="h-4 w-4" />
-              <span>Copy</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShareChapter}
-              className="flex items-center space-x-1"
-            >
-              <Share className="h-4 w-4" />
-              <span>Share</span>
-            </Button>
-          </div>
+          {!isMobile && (
+            <div className="flex justify-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyChapter}
+                className="flex items-center space-x-1"
+              >
+                <Copy className="h-4 w-4" />
+                <span>Copy</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShareChapter}
+                className="flex items-center space-x-1"
+              >
+                <Share className="h-4 w-4" />
+                <span>Share</span>
+              </Button>
+            </div>
+          )}
         </CardHeader>
-        <CardContent>
+        <CardContent className={isMobile ? 'px-2' : ''}>
           {chapterData?.content ? (
             <div 
-              className={`prose prose-slate dark:prose-invert max-w-none leading-relaxed ${getFontFamilyClass()}`}
+              className={`prose prose-slate dark:prose-invert max-w-none leading-relaxed ${getFontFamilyClass()} ${isMobile ? 'prose-sm' : ''}`}
               style={getContentStyle()}
               dangerouslySetInnerHTML={{ 
                 __html: processContent(chapterData.content) 

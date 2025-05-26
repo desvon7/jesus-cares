@@ -1,13 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { useBooks, useChapters, useBibleVersions } from '../../hooks/useComprehensiveBibleData';
 import { BibleVersion, Book as BookType, Chapter } from '../../services/comprehensiveBibleService';
+import { useBibleNavigation } from '../../hooks/useBibleNavigation';
 import BooksGrid from './BooksGrid';
 import ChaptersGrid from './ChaptersGrid';
 import VersesReader from './VersesReader';
 import BibleToolbar from './BibleToolbar';
+import MobileBibleNavigation from './MobileBibleNavigation';
 import ReadingSettingsPanel from './ReadingSettingsPanel';
 
 interface BibleReaderProps {
@@ -29,11 +31,9 @@ interface ReadingSettings {
 }
 
 const BibleReader: React.FC<BibleReaderProps> = ({ selectedVersion, onBack, autoOpenGenesis = false }) => {
+  const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<ViewMode>('books');
-  const [selectedBook, setSelectedBook] = useState<BookType | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [currentVersion, setCurrentVersion] = useState(selectedVersion);
   const [readingSettings, setReadingSettings] = useState<ReadingSettings>({
     fontSize: 16,
     fontFamily: 'serif',
@@ -44,65 +44,92 @@ const BibleReader: React.FC<BibleReaderProps> = ({ selectedVersion, onBack, auto
     paragraphMode: false
   });
 
+  const {
+    currentVersion,
+    currentBook,
+    currentChapter,
+    allChapters,
+    setCurrentVersion,
+    setCurrentBook,
+    setCurrentChapter,
+    setAllChapters,
+    goToPreviousChapter,
+    goToNextChapter,
+    canGoPrevious,
+    canGoNext
+  } = useBibleNavigation();
+
   const { versions } = useBibleVersions();
-  const { books, loading: booksLoading, error: booksError } = useBooks(currentVersion.id);
+  const { books, loading: booksLoading, error: booksError } = useBooks(currentVersion?.id || selectedVersion.id);
   const { chapters, loading: chaptersLoading, error: chaptersError } = useChapters(
-    currentVersion.id, 
-    selectedBook?.id || null
+    currentVersion?.id || selectedVersion.id, 
+    currentBook?.id || null
   );
+
+  // Initialize current version
+  useEffect(() => {
+    if (!currentVersion) {
+      setCurrentVersion(selectedVersion);
+    }
+  }, [selectedVersion, currentVersion, setCurrentVersion]);
+
+  // Update all chapters when chapters change
+  useEffect(() => {
+    setAllChapters(chapters);
+  }, [chapters, setAllChapters]);
 
   // Auto-open Genesis when books are loaded
   useEffect(() => {
-    if (autoOpenGenesis && books.length > 0 && !selectedBook) {
+    if (autoOpenGenesis && books.length > 0 && !currentBook) {
       const genesis = books.find(book => 
         book.id.includes('GEN') || 
         book.name.toLowerCase().includes('genesis') ||
         book.abbreviation.toLowerCase() === 'gen'
       );
       if (genesis) {
-        setSelectedBook(genesis);
+        setCurrentBook(genesis);
         setViewMode('verses');
       }
     }
-  }, [books, autoOpenGenesis, selectedBook]);
+  }, [books, autoOpenGenesis, currentBook, setCurrentBook]);
 
   // Auto-select chapter 1 when Genesis is selected
   useEffect(() => {
-    if (selectedBook && chapters.length > 0 && !selectedChapter && autoOpenGenesis) {
+    if (currentBook && chapters.length > 0 && !currentChapter && autoOpenGenesis) {
       const firstChapter = chapters.find(chapter => chapter.number === '1');
       if (firstChapter) {
-        setSelectedChapter(firstChapter);
+        setCurrentChapter(firstChapter);
       }
     }
-  }, [chapters, selectedBook, selectedChapter, autoOpenGenesis]);
+  }, [chapters, currentBook, currentChapter, autoOpenGenesis, setCurrentChapter]);
 
   const handleBookSelect = (book: BookType) => {
-    setSelectedBook(book);
-    setSelectedChapter(null);
+    setCurrentBook(book);
+    setCurrentChapter(null);
     setViewMode('chapters');
   };
 
   const handleChapterSelect = (chapter: Chapter) => {
-    setSelectedChapter(chapter);
+    setCurrentChapter(chapter);
     setViewMode('verses');
   };
 
   const handleBackToBooks = () => {
-    setSelectedBook(null);
-    setSelectedChapter(null);
+    setCurrentBook(null);
+    setCurrentChapter(null);
     setViewMode('books');
   };
 
   const handleBackToChapters = () => {
-    setSelectedChapter(null);
+    setCurrentChapter(null);
     setViewMode('chapters');
   };
 
   const handleVersionChange = (version: BibleVersion) => {
     setCurrentVersion(version);
     // Reset navigation when version changes
-    setSelectedBook(null);
-    setSelectedChapter(null);
+    setCurrentBook(null);
+    setCurrentChapter(null);
     setViewMode('books');
   };
 
@@ -116,21 +143,24 @@ const BibleReader: React.FC<BibleReaderProps> = ({ selectedVersion, onBack, auto
 
   return (
     <div className={containerClass}>
-      <BibleToolbar
-        selectedVersion={currentVersion}
-        selectedBook={selectedBook}
-        selectedChapter={selectedChapter}
-        onVersionChange={handleVersionChange}
-        onBookSelect={handleBookSelect}
-        onChapterSelect={handleChapterSelect}
-        onSettingsOpen={() => setShowSettings(true)}
-        availableVersions={versions}
-        availableBooks={books}
-        availableChapters={chapters}
-      />
+      {/* Desktop Toolbar */}
+      {!isMobile && (
+        <BibleToolbar
+          selectedVersion={currentVersion || selectedVersion}
+          selectedBook={currentBook}
+          selectedChapter={currentChapter}
+          onVersionChange={handleVersionChange}
+          onBookSelect={handleBookSelect}
+          onChapterSelect={handleChapterSelect}
+          onSettingsOpen={() => setShowSettings(true)}
+          availableVersions={versions}
+          availableBooks={books}
+          availableChapters={chapters}
+        />
+      )}
 
       <div className="relative">
-        <div className="max-w-4xl mx-auto p-4">
+        <div className={`max-w-4xl mx-auto p-4 ${isMobile ? 'pb-24' : ''}`}>
           {viewMode === 'books' && (
             <BooksGrid 
               books={books}
@@ -140,9 +170,9 @@ const BibleReader: React.FC<BibleReaderProps> = ({ selectedVersion, onBack, auto
             />
           )}
 
-          {viewMode === 'chapters' && selectedBook && (
+          {viewMode === 'chapters' && currentBook && (
             <ChaptersGrid
-              book={selectedBook}
+              book={currentBook}
               chapters={chapters}
               loading={chaptersLoading}
               error={chaptersError}
@@ -151,15 +181,31 @@ const BibleReader: React.FC<BibleReaderProps> = ({ selectedVersion, onBack, auto
             />
           )}
 
-          {viewMode === 'verses' && selectedBook && selectedChapter && (
+          {viewMode === 'verses' && currentBook && currentChapter && (
             <VersesReader
-              book={selectedBook}
-              chapter={selectedChapter}
+              book={currentBook}
+              chapter={currentChapter}
               onBack={handleBackToChapters}
               readingSettings={readingSettings}
             />
           )}
         </div>
+
+        {/* Mobile Navigation */}
+        {isMobile && (
+          <MobileBibleNavigation
+            selectedVersion={currentVersion || selectedVersion}
+            selectedBook={currentBook}
+            selectedChapter={currentChapter}
+            onVersionSelect={handleBackToBooks}
+            onBookSelect={handleBackToChapters}
+            onChapterSelect={() => setViewMode('chapters')}
+            onPreviousChapter={goToPreviousChapter}
+            onNextChapter={goToNextChapter}
+            canGoPrevious={canGoPrevious}
+            canGoNext={canGoNext}
+          />
+        )}
 
         {/* Settings Panel Overlay */}
         {showSettings && (

@@ -17,38 +17,10 @@ export class BibleDataFetcher {
   async fetchVersionsFromGitHub(): Promise<BibleVersion[]> {
     try {
       console.log('Discovering Bible versions from bible-data repository...');
-      
-      // Try to fetch from the data directory structure
-      try {
-        const versionsData = await this.githubService.fetchFromGitHub('data/versions.json');
-        if (Array.isArray(versionsData)) {
-          return versionsData.map((version: any) => ({
-            id: version.id || version.abbreviation || 'unknown',
-            name: version.name || version.full_name || 'Unknown Version',
-            nameLocal: version.nameLocal || version.name || 'Unknown Version',
-            abbreviation: version.abbreviation || version.id || 'UNK',
-            abbreviationLocal: version.abbreviationLocal || version.abbreviation || 'UNK',
-            description: version.description || `${version.name || 'Bible'} translation`,
-            language: {
-              id: version.language?.id || 'en',
-              name: version.language?.name || 'English',
-              nameLocal: version.language?.nameLocal || 'English',
-              script: version.language?.script || 'Latin',
-              scriptDirection: version.language?.scriptDirection || 'ltr'
-            },
-            source: 'github-data' as const
-          }));
-        }
-      } catch (error) {
-        console.log('No versions.json found, scanning for available Bible files...');
-      }
-      
-      // If versions.json doesn't exist, discover from available JSON files
       return await this.versionDiscovery.discoverVersionsFromFiles();
-      
     } catch (error) {
       console.error('Error fetching versions from GitHub:', error);
-      return await this.versionDiscovery.discoverVersionsFromFiles();
+      return [];
     }
   }
 
@@ -56,8 +28,8 @@ export class BibleDataFetcher {
     try {
       console.log(`Attempting to fetch books for ${bibleId} from GitHub...`);
       
-      // First try to get the full Bible data
-      const bibleData = await this.githubService.fetchFromGitHub(`data/${bibleId}.json`);
+      // Fetch the Bible data directly from root (not /data/ path)
+      const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
       
       if (bibleData && typeof bibleData === 'object') {
         // Extract books from the Bible data structure
@@ -89,7 +61,8 @@ export class BibleDataFetcher {
     try {
       console.log(`Attempting to fetch chapters for ${bibleId}:${bookId} from GitHub...`);
       
-      const bibleData = await this.githubService.fetchFromGitHub(`data/${bibleId}.json`);
+      // Fetch directly from root path
+      const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
       const bookKey = bookId.toLowerCase();
       
       if (bibleData && bibleData[bookKey]) {
@@ -118,7 +91,8 @@ export class BibleDataFetcher {
       const [, bookId, chapterNum] = chapterId.split('.');
       console.log(`Attempting to fetch chapter text for ${bibleId}:${bookId}:${chapterNum} from GitHub...`);
       
-      const bibleData = await this.githubService.fetchFromGitHub(`data/${bibleId}.json`);
+      // Fetch directly from root path
+      const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
       const bookKey = bookId.toLowerCase();
       
       if (bibleData && bibleData[bookKey] && bibleData[bookKey][chapterNum]) {
