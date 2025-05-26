@@ -237,7 +237,7 @@ export class BibleDataFetcher {
       'ezra': 'Ezra', 'ezr': 'Ezra',
       'nehemiah': 'Nehemiah', 'neh': 'Nehemiah',
       'esther': 'Esther', 'est': 'Esther',
-      'job': 'Job', 'job': 'Job',
+      'job': 'Job',
       'psalms': 'Psalms', 'psa': 'Psalms', 'psalm': 'Psalms',
       'proverbs': 'Proverbs', 'pro': 'Proverbs',
       'ecclesiastes': 'Ecclesiastes', 'ecc': 'Ecclesiastes',
