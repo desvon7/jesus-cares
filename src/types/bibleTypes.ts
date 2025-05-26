@@ -12,7 +12,7 @@ export interface BibleVersion {
     script: string;
     scriptDirection: string;
   };
-  source: 'static' | 'api-bible' | 'github-unfolding' | 'github-step' | 'github-data';
+  source: 'static' | 'api-bible' | 'github-unfolding' | 'github-step' | 'github-data' | 'local-json';
 }
 
 export interface Book {

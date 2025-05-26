@@ -1,4 +1,3 @@
-
 import { BibleVersion, Book, Chapter } from '../../types/bibleTypes';
 import { GitHubDataService } from './githubDataService';
 import { BibleVersionDiscovery } from './bibleVersionDiscovery';
@@ -11,7 +10,7 @@ export class BibleDataFetcher {
 
   constructor() {
     this.githubService = new GitHubDataService();
-    this.versionDiscovery = new BibleVersionDiscovery(this.githubService);
+    this.versionDiscovery = new BibleVersionDiscovery();
   }
 
   async fetchVersionsFromGitHub(): Promise<BibleVersion[]> {
