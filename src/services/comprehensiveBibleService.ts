@@ -25,17 +25,17 @@ class ComprehensiveBibleService {
       return cachedData;
     }
 
-    console.log('Fetching Bible versions from GitHub and static sources...');
+    console.log('Fetching Bible versions from bible-data repository and static sources...');
     
     let allVersions = [...STATIC_BIBLE_VERSIONS];
     
-    // Try to fetch from GitHub bible-data repository
+    // Try to fetch from bible-data repository
     try {
       const githubVersions = await bibleDataFetcher.fetchVersionsFromGitHub();
-      console.log(`Found ${githubVersions.length} versions from GitHub`);
+      console.log(`Found ${githubVersions.length} versions from bible-data repository`);
       allVersions = [...allVersions, ...githubVersions];
     } catch (error) {
-      console.warn('Could not fetch from GitHub bible-data, using static versions:', error);
+      console.warn('Could not fetch from bible-data repository, using static versions:', error);
     }
 
     // Remove duplicates based on ID
@@ -59,17 +59,28 @@ class ComprehensiveBibleService {
 
     console.log(`Loading books for ${bibleId}...`);
     
-    // Try GitHub first if it's a GitHub source
+    // Check if this is a bible-data version
     const version = STATIC_BIBLE_VERSIONS.find(v => v.id === bibleId);
     if (version?.source === 'github-data') {
       try {
         const githubBooks = await bibleDataFetcher.fetchBooksFromGitHub(bibleId);
         this.cache.setCachedData(cacheKey, githubBooks);
-        console.log(`Loaded ${githubBooks.length} books from GitHub for ${bibleId}`);
+        console.log(`Loaded ${githubBooks.length} books from bible-data for ${bibleId}`);
         return githubBooks;
       } catch (error) {
-        console.warn(`GitHub books fetch failed for ${bibleId}:`, error);
+        console.warn(`bible-data books fetch failed for ${bibleId}:`, error);
       }
+    }
+    
+    // Check for other GitHub sources
+    if (version?.source === 'github-unfolding' && this.githubService) {
+      console.log(`Trying GitHub unfoldingWord for books of ${bibleId}`);
+      // GitHub unfoldingWord books are not available, fallback to standard books
+    }
+
+    if (version?.source === 'github-step' && this.githubService) {
+      console.log(`Trying GitHub STEPBible for books of ${bibleId}`);
+      // GitHub STEPBible books are not available, fallback to standard books
     }
     
     // Fallback to standard books structure
@@ -94,17 +105,28 @@ class ComprehensiveBibleService {
 
     console.log(`Loading chapters for ${bibleId}:${bookId}...`);
     
-    // Try GitHub first if it's a GitHub source
+    // Check if this is a bible-data version
     const version = STATIC_BIBLE_VERSIONS.find(v => v.id === bibleId);
     if (version?.source === 'github-data') {
       try {
         const githubChapters = await bibleDataFetcher.fetchChaptersFromGitHub(bibleId, bookId);
         this.cache.setCachedData(cacheKey, githubChapters);
-        console.log(`Loaded ${githubChapters.length} chapters from GitHub for ${bibleId}:${bookId}`);
+        console.log(`Loaded ${githubChapters.length} chapters from bible-data for ${bibleId}:${bookId}`);
         return githubChapters;
       } catch (error) {
-        console.warn(`GitHub chapters fetch failed for ${bibleId}:${bookId}:`, error);
+        console.warn(`bible-data chapters fetch failed for ${bibleId}:${bookId}:`, error);
       }
+    }
+    
+    // Check for other GitHub sources
+    if (version?.source === 'github-unfolding' && this.githubService) {
+      console.log(`Trying GitHub unfoldingWord for chapters of ${bibleId}:${bookId}`);
+      // GitHub unfoldingWord chapters are not available, fallback to standard chapters
+    }
+
+    if (version?.source === 'github-step' && this.githubService) {
+      console.log(`Trying GitHub STEPBible for chapters of ${bibleId}:${bookId}`);
+      // GitHub STEPBible chapters are not available, fallback to standard chapters
     }
     
     // Fallback to standard chapter counts
@@ -140,21 +162,15 @@ class ComprehensiveBibleService {
     if (version) {
       console.log(`Found version: ${version.name} (${version.source})`);
 
-      // Try GitHub data first if it's a GitHub source
+      // Try bible-data repository first if it's a github-data source
       if (version.source === 'github-data') {
         try {
-          console.log(`Trying GitHub bible-data for ${bibleId}`);
+          console.log(`Trying bible-data repository for ${bibleId}`);
           const content = await bibleDataFetcher.fetchChapterTextFromGitHub(bibleId, chapterId);
-          const chapterData = {
-            id: chapterId,
-            bibleId,
-            reference: `${book?.name} ${chapterNum}`,
-            content: content.content
-          };
-          this.cache.setCachedData(cacheKey, chapterData);
-          return chapterData;
+          this.cache.setCachedData(cacheKey, content);
+          return content;
         } catch (error) {
-          console.warn(`GitHub bible-data failed for ${bibleId}:`, error);
+          console.warn(`bible-data repository failed for ${bibleId}:`, error);
         }
       }
 
