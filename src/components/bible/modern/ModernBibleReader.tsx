@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { BibleVersion } from '../../../services/comprehensiveBibleService';
 import { BibleReaderProvider } from '../providers/BibleReaderProvider';
 import { ModernBibleInterface } from './ModernBibleInterface';
@@ -15,6 +15,13 @@ const ModernBibleReader: React.FC<ModernBibleReaderProps> = ({
   onBack, 
   autoOpenGenesis = false 
 }) => {
+  console.log('ModernBibleReader rendering with version:', selectedVersion);
+  
+  if (!selectedVersion) {
+    console.error('ModernBibleReader: selectedVersion is required');
+    return null;
+  }
+
   return (
     <BibleReaderProvider 
       selectedVersion={selectedVersion} 

@@ -39,6 +39,7 @@ const BibleReaderContext = createContext<BibleReaderContextType | undefined>(und
 export const useBibleReaderContext = () => {
   const context = useContext(BibleReaderContext);
   if (!context) {
+    console.error('useBibleReaderContext called outside of BibleReaderProvider');
     throw new Error('useBibleReaderContext must be used within a BibleReaderProvider');
   }
   return context;
@@ -55,6 +56,8 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
   selectedVersion,
   autoOpenGenesis = false
 }) => {
+  console.log('BibleReaderProvider rendering with selectedVersion:', selectedVersion);
+  
   const [viewMode, setViewMode] = useState<ViewMode>('books');
   const [showSettings, setShowSettings] = useState(false);
   const [readingSettings, setReadingSettings] = useState<ReadingSettings>(defaultReadingSettings);
@@ -83,7 +86,8 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
 
   // Initialize current version
   useEffect(() => {
-    if (!currentVersion) {
+    console.log('Initializing version:', selectedVersion);
+    if (!currentVersion && selectedVersion) {
       setCurrentVersion(selectedVersion);
     }
   }, [selectedVersion, currentVersion, setCurrentVersion]);
@@ -125,7 +129,7 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
     setShowSettings,
     readingSettings,
     setReadingSettings,
-    currentVersion,
+    currentVersion: currentVersion || selectedVersion,
     currentBook,
     currentChapter,
     allChapters,
@@ -144,6 +148,12 @@ export const BibleReaderProvider: React.FC<BibleReaderProviderProps> = ({
     chaptersLoading,
     chaptersError
   };
+
+  console.log('BibleReaderProvider providing context value:', {
+    currentVersion: value.currentVersion?.id,
+    viewMode: value.viewMode,
+    booksCount: value.books.length
+  });
 
   return (
     <BibleReaderContext.Provider value={value}>
