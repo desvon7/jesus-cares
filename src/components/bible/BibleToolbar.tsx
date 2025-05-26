@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, Settings, Home } from 'lucide-react';
+import { ArrowLeft, Settings, Home, Languages } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { BibleVersion, Book, Chapter } from '../../services/comprehensiveBibleService';
 
 interface BibleToolbarProps {
@@ -43,6 +49,21 @@ const BibleToolbar: React.FC<BibleToolbarProps> = ({
     navigate('/');
   };
 
+  const handleLanguageChange = (languageId: string) => {
+    // Find versions in the selected language
+    const languageVersions = availableVersions.filter(v => v.language.id === languageId);
+    if (languageVersions.length > 0) {
+      onVersionChange(languageVersions[0]);
+    }
+  };
+
+  // Get unique languages from available versions
+  const availableLanguages = Array.from(
+    new Map(
+      availableVersions.map(v => [v.language.id, v.language])
+    ).values()
+  );
+
   return (
     <div className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -62,6 +83,28 @@ const BibleToolbar: React.FC<BibleToolbarProps> = ({
 
           {/* Center - Bible navigation */}
           <div className="flex items-center space-x-4">
+            {/* Language selector */}
+            {availableLanguages.length > 1 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                    <Languages className="h-4 w-4" />
+                    <span className="hidden sm:inline">{selectedVersion.language.nameLocal}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {availableLanguages.map((language) => (
+                    <DropdownMenuItem 
+                      key={language.id}
+                      onClick={() => handleLanguageChange(language.id)}
+                    >
+                      {language.nameLocal}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
             {/* Version selector */}
             <Select 
               value={selectedVersion.id} 

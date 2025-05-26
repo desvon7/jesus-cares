@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { Copy, Share, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Copy, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Book, Chapter } from '../../services/comprehensiveBibleService';
@@ -33,11 +32,7 @@ const VersesReader: React.FC<VersesReaderProps> = ({
   book, 
   chapter, 
   onBack,
-  readingSettings,
-  onPreviousChapter,
-  onNextChapter,
-  canGoPrevious = false,
-  canGoNext = false
+  readingSettings
 }) => {
   const isMobile = useIsMobile();
   const { chapterData, loading, error } = useChapterText(book.bibleId, chapter.id);
@@ -120,11 +115,7 @@ const VersesReader: React.FC<VersesReaderProps> = ({
             <span className="text-red-600 dark:text-red-400 text-xl">!</span>
           </div>
           <p className="text-red-600 dark:text-red-400 font-medium">{error}</p>
-          {!isMobile && (
-            <Button onClick={onBack} variant="outline" className="mt-4">
-              Go Back
-            </Button>
-          )}
+          <p className="text-sm text-slate-500 dark:text-slate-400">Try selecting a different version like KJV, NIV, or ESV</p>
         </div>
       </div>
     );
@@ -132,29 +123,16 @@ const VersesReader: React.FC<VersesReaderProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Apple-style header with clean typography */}
-      <div className={`sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 z-10 ${isMobile ? 'px-4 py-3' : 'px-6 py-4'}`}>
+      {/* Clean header with chapter info and actions */}
+      <div className={`sticky top-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 z-10 ${isMobile ? 'px-4 py-3' : 'px-6 py-4'}`}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {!isMobile && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onBack}
-                className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Back
-              </Button>
-            )}
-            <div>
-              <h1 className={`font-semibold text-slate-900 dark:text-slate-100 ${isMobile ? 'text-lg' : 'text-xl'}`}>
-                {book.name}
-              </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Chapter {chapter.number}
-              </p>
-            </div>
+          <div>
+            <h1 className={`font-semibold text-slate-900 dark:text-slate-100 ${isMobile ? 'text-lg' : 'text-xl'}`}>
+              {book.name}
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Chapter {chapter.number}
+            </p>
           </div>
           
           {!isMobile && (
@@ -180,38 +158,7 @@ const VersesReader: React.FC<VersesReaderProps> = ({
         </div>
       </div>
 
-      {/* Navigation controls */}
-      <div className={`flex items-center justify-between ${isMobile ? 'px-4 py-3' : 'px-6 py-4'} border-b border-slate-100 dark:border-slate-800`}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onPreviousChapter}
-          disabled={!canGoPrevious}
-          className="text-blue-600 dark:text-blue-400 disabled:text-slate-400 disabled:cursor-not-allowed"
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Previous
-        </Button>
-        
-        <div className="text-center">
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            {book.name} {chapter.number}
-          </p>
-        </div>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onNextChapter}
-          disabled={!canGoNext}
-          className="text-blue-600 dark:text-blue-400 disabled:text-slate-400 disabled:cursor-not-allowed"
-        >
-          Next
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
-      </div>
-
-      {/* Content area with Apple-style spacing and typography */}
+      {/* Content area with clean typography */}
       <div className={`${isMobile ? 'px-4 py-6' : 'px-6 py-8'}`}>
         {chapterData?.content ? (
           <div 
@@ -234,6 +181,7 @@ const VersesReader: React.FC<VersesReaderProps> = ({
               <span className="text-slate-400 text-xl">📖</span>
             </div>
             <p className="text-slate-500 dark:text-slate-400 font-medium">No content available for this chapter.</p>
+            <p className="text-sm text-slate-400 mt-2">Try switching to a different Bible version.</p>
           </div>
         )}
       </div>

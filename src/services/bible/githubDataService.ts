@@ -23,7 +23,6 @@ export class GitHubDataService {
   }
 
   async fetchDirectoryListing(): Promise<string[]> {
-    // These are the actual files available in your repository
     const availableFiles = [
       'kjv.json', 'niv.json', 'esv.json', 'nlt.json', 'nasb1995.json', 'nkjv.json'
     ];

@@ -59,7 +59,7 @@ export class BibleContentParser {
           <span class="text-slate-400 text-xl">📖</span>
         </div>
         <p class="text-slate-500 dark:text-slate-400 font-medium">Scripture content not available. This version may not have real text data in the repository.</p>
-        <p class="text-sm text-slate-400 mt-2">Available sources with real scripture: KJV, NIV, ESV, NASB, NKJV, NLT</p>
+        <p class="text-sm text-slate-400 mt-2">Try switching to KJV, NIV, ESV, NASB, NKJV, or NLT versions which have verified content.</p>
       </div>`;
     }
 
