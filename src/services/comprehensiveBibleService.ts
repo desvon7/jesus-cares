@@ -3,36 +3,18 @@ import { BibleVersion, Book, Chapter, Verse } from '../types/bibleTypes';
 import { STATIC_BIBLE_VERSIONS } from '../data/staticBibleVersions';
 import { STANDARD_BOOKS, CHAPTER_COUNTS } from '../data/standardBooks';
 import { BibleCache } from './bibleCache';
+import { contentGenerator } from './contentGenerator';
+import { bibleDataFetcher } from './bibleDataFetcher';
 
 class ComprehensiveBibleService {
   private cache = new BibleCache();
   private githubService: any;
-  // Updated to use a real Bible data repository
-  private githubRepo = 'scrollmapper/bible_databases'; // This is a real repo with Bible data
 
   constructor() {
     // Import the GitHub service
     import('./githubBibleSources').then(module => {
       this.githubService = module.githubBibleService;
     });
-  }
-
-  private async fetchFromGitHub(path: string) {
-    const url = `https://raw.githubusercontent.com/${this.githubRepo}/master/${path}`;
-    console.log(`Attempting to fetch from GitHub: ${url}`);
-    
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const data = await response.json();
-      console.log(`Successfully fetched ${path}:`, data);
-      return data;
-    } catch (error) {
-      console.error(`Failed to fetch ${path}:`, error);
-      throw error;
-    }
   }
 
   async getBibleVersions(): Promise<BibleVersion[]> {
@@ -161,7 +143,7 @@ class ComprehensiveBibleService {
           id: chapterId,
           bibleId,
           reference: `${book?.name} ${chapterNum}`,
-          content: this.generateEnhancedContent(book?.name || bookId, chapterNum, version.name)
+          content: contentGenerator.generateEnhancedContent(book?.name || bookId, chapterNum, version.name)
         };
         this.cache.setCachedData(cacheKey, chapterData);
         return chapterData;
@@ -173,47 +155,10 @@ class ComprehensiveBibleService {
       id: chapterId,
       bibleId,
       reference: `${book?.name || bookId} ${chapterNum}`,
-      content: this.generateEnhancedContent(book?.name || bookId, chapterNum, 'Bible')
+      content: contentGenerator.generateEnhancedContent(book?.name || bookId, chapterNum, 'Bible')
     };
     this.cache.setCachedData(cacheKey, chapterData);
     return chapterData;
-  }
-
-  private generateEnhancedContent(bookName: string, chapterNum: string, versionName: string): string {
-    // Generate more realistic Bible content based on book and chapter
-    const verses = this.getVerseContentForChapter(bookName, parseInt(chapterNum));
-    
-    let content = `<h3>Chapter ${chapterNum}</h3>`;
-    verses.forEach((verse, index) => {
-      content += `<p><sup>${index + 1}</sup> ${verse}</p>`;
-    });
-    
-    return content;
-  }
-
-  private getVerseContentForChapter(bookName: string, chapterNum: number): string[] {
-    // Sample content based on well-known Bible passages
-    if (bookName === 'Genesis' && chapterNum === 1) {
-      return [
-        "In the beginning God created the heavens and the earth.",
-        "Now the earth was formless and empty, darkness was over the surface of the deep, and the Spirit of God was hovering over the waters.",
-        "And God said, 'Let there be light,' and there was light.",
-        "God saw that the light was good, and he separated the light from the darkness.",
-        "God called the light 'day,' and the darkness he called 'night.' And there was evening, and there was morning—the first day."
-      ];
-    } else if (bookName === 'John' && chapterNum === 3) {
-      return [
-        "Now there was a Pharisee, a man named Nicodemus who was a member of the Jewish ruling council.",
-        "He came to Jesus at night and said, 'Rabbi, we know that you are a teacher who has come from God. For no one could perform the signs you are doing if God were not with him.'",
-        "Jesus replied, 'Very truly I tell you, no one can see the kingdom of God unless they are born again.'"
-      ];
-    } else {
-      // Generic content for other chapters
-      const verseCount = Math.floor(Math.random() * 15) + 5; // 5-20 verses
-      return Array.from({ length: verseCount }, (_, i) => 
-        `This is verse ${i + 1} of ${bookName} chapter ${chapterNum}. Content from the ${bookName} demonstrates the rich teachings and narratives found throughout Scripture.`
-      );
-    }
   }
 
   async getVerses(bibleId: string, chapterId: string): Promise<Verse[]> {
