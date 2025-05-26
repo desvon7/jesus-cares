@@ -7,18 +7,21 @@ export class BibleVersionDiscovery {
 
   async discoverVersionsFromFiles(): Promise<BibleVersion[]> {
     try {
-      console.log('Discovering real Bible versions from repository files...');
+      console.log('Discovering Bible versions from jesus-cares repository...');
       
       const availableFiles = await this.githubService.fetchDirectoryListing();
       const versions: BibleVersion[] = [];
 
-      for (const file of availableFiles) {
+      // Priority versions to test first
+      const priorityVersions = ['kjv.json', 'niv.json', 'esv.json', 'nlt.json', 'nasb1995.json'];
+      const allFiles = [...priorityVersions, ...availableFiles.filter(f => !priorityVersions.includes(f))];
+
+      for (const file of allFiles.slice(0, 10)) { // Limit to first 10 for performance
         if (file.endsWith('.json')) {
           const versionId = file.replace('.json', '');
           console.log(`Processing Bible file: ${file} -> ${versionId}`);
           
           try {
-            // Try to fetch a small sample to verify the file contains real Bible data
             const sampleData = await this.githubService.fetchFromGitHub(file);
             
             if (this.isValidBibleData(sampleData)) {
@@ -50,11 +53,10 @@ export class BibleVersionDiscovery {
   private isValidBibleData(data: any): boolean {
     if (!data || typeof data !== 'object') return false;
     
-    // Check if it looks like Bible data structure
     const keys = Object.keys(data);
     if (keys.length === 0) return false;
     
-    // Look for book-like structures
+    // Check if it looks like Bible data structure
     const sampleKey = keys[0];
     const sampleBook = data[sampleKey];
     
@@ -62,7 +64,6 @@ export class BibleVersionDiscovery {
       const chapterKeys = Object.keys(sampleBook);
       if (chapterKeys.length > 0) {
         const sampleChapter = sampleBook[chapterKeys[0]];
-        // Check if chapter contains verse-like data
         return Array.isArray(sampleChapter) || (typeof sampleChapter === 'object' && sampleChapter !== null);
       }
     }
@@ -71,31 +72,21 @@ export class BibleVersionDiscovery {
   }
 
   private createVersionFromFile(versionId: string, data: any): BibleVersion {
-    // Map common version IDs to proper names
     const versionNames: Record<string, string> = {
-      'asv': 'American Standard Version',
       'kjv': 'King James Version',
       'niv': 'New International Version',
       'esv': 'English Standard Version',
-      'nasb1995': 'New American Standard Bible 1995',
       'nlt': 'New Living Translation',
+      'nasb1995': 'New American Standard Bible 1995',
       'nkjv': 'New King James Version',
       'amp': 'Amplified Bible',
       'msg': 'The Message',
-      'ylt98': 'Young\'s Literal Translation 1898',
+      'asv': 'American Standard Version',
       'bsb': 'Berean Study Bible',
-      'cjb': 'Complete Jewish Bible',
       'csb': 'Christian Standard Bible',
-      'darby': 'Darby Translation',
-      'erv': 'Easy-to-Read Version',
-      'gnv': 'Geneva Bible 1599',
-      'hcsb': 'Holman Christian Standard Bible',
-      'leb': 'Lexham English Bible',
-      'mev': 'Modern English Version',
       'net': 'NET Bible',
-      'nrsvue': 'New Revised Standard Version Updated Edition',
-      'rsv': 'Revised Standard Version',
-      'webbe': 'World English Bible British Edition'
+      'nrsv': 'New Revised Standard Version',
+      'rsv': 'Revised Standard Version'
     };
 
     const name = versionNames[versionId.toLowerCase()] || versionId.toUpperCase();
@@ -106,7 +97,7 @@ export class BibleVersionDiscovery {
       nameLocal: name,
       abbreviation: versionId.toUpperCase(),
       abbreviationLocal: versionId.toUpperCase(),
-      description: `${name} - Real Scripture from GitHub repository`,
+      description: `${name} - Real Scripture from jesus-cares repository`,
       language: {
         id: 'en',
         name: 'English',

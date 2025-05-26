@@ -134,9 +134,9 @@ const BibleReader: React.FC<BibleReaderProps> = ({ selectedVersion, onBack, auto
   };
 
   const themeClasses = {
-    light: 'bg-white text-slate-900',
+    light: 'bg-slate-50 text-slate-900',
     dark: 'bg-slate-900 text-slate-100',
-    sepia: 'bg-yellow-50 text-amber-900'
+    sepia: 'bg-amber-50 text-amber-900'
   };
 
   const containerClass = `min-h-screen ${themeClasses[readingSettings.theme]}`;
@@ -160,7 +160,7 @@ const BibleReader: React.FC<BibleReaderProps> = ({ selectedVersion, onBack, auto
       )}
 
       <div className="relative">
-        <div className={`max-w-4xl mx-auto p-4 ${isMobile ? 'pb-24' : ''}`}>
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'pb-24' : ''}`}>
           {viewMode === 'books' && (
             <BooksGrid 
               books={books}
@@ -187,6 +187,10 @@ const BibleReader: React.FC<BibleReaderProps> = ({ selectedVersion, onBack, auto
               chapter={currentChapter}
               onBack={handleBackToChapters}
               readingSettings={readingSettings}
+              onPreviousChapter={goToPreviousChapter}
+              onNextChapter={goToNextChapter}
+              canGoPrevious={canGoPrevious}
+              canGoNext={canGoNext}
             />
           )}
         </div>
@@ -209,7 +213,7 @@ const BibleReader: React.FC<BibleReaderProps> = ({ selectedVersion, onBack, auto
 
         {/* Settings Panel Overlay */}
         {showSettings && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
             <ReadingSettingsPanel
               settings={readingSettings}
               onSettingsChange={setReadingSettings}

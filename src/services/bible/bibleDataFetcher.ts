@@ -1,4 +1,3 @@
-
 import { BibleVersion, Book, Chapter } from '../../types/bibleTypes';
 import { GitHubDataService } from './githubDataService';
 import { BibleVersionDiscovery } from './bibleVersionDiscovery';
@@ -26,13 +25,11 @@ export class BibleDataFetcher {
 
   async fetchBooksFromGitHub(bibleId: string): Promise<Book[]> {
     try {
-      console.log(`Attempting to fetch books for ${bibleId} from GitHub...`);
+      console.log(`Attempting to fetch books for ${bibleId} from jesus-cares repository...`);
       
-      // Fetch the Bible data directly from root (not /data/ path)
       const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
       
       if (bibleData && typeof bibleData === 'object') {
-        // Extract books from the Bible data structure
         const books = Object.keys(bibleData).map((bookKey, index) => {
           const bookData = bibleData[bookKey];
           const bookName = BibleBookMapper.getBookName(bookKey);
@@ -59,9 +56,8 @@ export class BibleDataFetcher {
 
   async fetchChaptersFromGitHub(bibleId: string, bookId: string): Promise<Chapter[]> {
     try {
-      console.log(`Attempting to fetch chapters for ${bibleId}:${bookId} from GitHub...`);
+      console.log(`Attempting to fetch chapters for ${bibleId}:${bookId} from jesus-cares repository...`);
       
-      // Fetch directly from root path
       const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
       const bookKey = bookId.toLowerCase();
       
@@ -89,9 +85,8 @@ export class BibleDataFetcher {
   async fetchChapterTextFromGitHub(bibleId: string, chapterId: string): Promise<any> {
     try {
       const [, bookId, chapterNum] = chapterId.split('.');
-      console.log(`Attempting to fetch chapter text for ${bibleId}:${bookId}:${chapterNum} from GitHub...`);
+      console.log(`Attempting to fetch chapter text for ${bibleId}:${bookId}:${chapterNum} from jesus-cares repository...`);
       
-      // Fetch directly from root path
       const bibleData = await this.githubService.fetchFromGitHub(`${bibleId}.json`);
       const bookKey = bookId.toLowerCase();
       
