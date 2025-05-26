@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, Globe, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,9 +9,15 @@ import { BibleVersion } from '../../services/comprehensiveBibleService';
 
 interface BibleVersionSelectorProps {
   onVersionSelect: (version: BibleVersion) => void;
+  title?: string;
+  subtitle?: string;
 }
 
-const BibleVersionSelector: React.FC<BibleVersionSelectorProps> = ({ onVersionSelect }) => {
+const BibleVersionSelector: React.FC<BibleVersionSelectorProps> = ({ 
+  onVersionSelect, 
+  title = "Choose Your Bible Version",
+  subtitle = "Select from comprehensive translations in multiple languages"
+}) => {
   const { versions, loading, error } = useBibleVersions();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
@@ -76,11 +81,14 @@ const BibleVersionSelector: React.FC<BibleVersionSelectorProps> = ({ onVersionSe
         <Card>
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-center mb-2">
-              Choose Your Bible Version
+              {title}
             </CardTitle>
             <div className="text-center mb-4">
               <p className="text-slate-600 dark:text-slate-400 flex items-center justify-center gap-2">
                 <Globe className="h-4 w-4" />
+                {subtitle}
+              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
                 {versions.length} translations in {languages.length} languages
               </p>
             </div>
