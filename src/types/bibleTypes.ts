@@ -1,4 +1,3 @@
-
 export interface BibleVersion {
   id: string;
   name: string;
@@ -13,7 +12,7 @@ export interface BibleVersion {
     script: string;
     scriptDirection: string;
   };
-  source: 'static' | 'api-bible' | 'github-unfolding' | 'github-step';
+  source: 'static' | 'api-bible' | 'github-unfolding' | 'github-step' | 'github-data';
 }
 
 export interface Book {
