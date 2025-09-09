@@ -81,6 +81,7 @@ const BibleModel: React.FC<BibleModelProps> = ({
       </mesh>
       
       {/* Title on front cover - more elegant typography */}
+      {/* @ts-ignore */}
       <Text
         position={[0, 0.2, 0.151]}
         rotation={[0, 0, 0]}
@@ -95,6 +96,7 @@ const BibleModel: React.FC<BibleModelProps> = ({
       </Text>
 
       {/* Title on spine - with matching typography */}
+      {/* @ts-ignore */}
       <Text
         position={[-0.6, 0, 0.026]}
         rotation={[0, Math.PI/2, Math.PI/2]}
